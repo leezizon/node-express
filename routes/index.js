@@ -6,4 +6,8 @@ router.get('/', function(req, res, next) {
   res.render('index.html');
 });
 
+router.get('/lee', function(req, res, next) {
+  res.render('gpt2.html');
+});
+
 module.exports = router;
