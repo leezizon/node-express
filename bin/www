@@ -7,6 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('myapp:server');
 var http = require('http');
+const WebSocket = require('ws');
 
 /**
  * Get port from environment and store in Express.
@@ -20,6 +21,32 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+const wss = new WebSocket.Server({server});
+
+const sockets = [];
+wss.on("connection",(socket)=>{
+  sockets.push(socket);
+  console.log('getIPAddress()');
+  // socket["nickName"] = "anon";
+  // socket.on("close", ()=>console.log("close"));
+  // socket.on("message",(msg)=>{
+  //    const messageString = msg.toString('utf8');
+  //    const message = JSON.parse(messageString);
+  //    switch (message.type){
+  //       case "N_message":
+  //          sockets.forEach((aSoc) => aSoc.send(`${socket.nickName} : ${message.message}`));
+  //          console.log("N_message");
+  //          break;
+  //       case "nickName":
+  //          socket["nickName"] = message.message;
+  //          console.log("nickName");
+  //          break;
+  //    }
+  // });
+  // socket.send('send message');
+});
+
+
 
 /**
  * Listen on provided port, on all network interfaces.

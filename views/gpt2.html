@@ -101,6 +101,16 @@
 
 
   <script>
+
+    const socket = new WebSocket(`ws://${window.location.host}`);
+    
+    socket.addEventListener("open",()=> {
+      console.log('addEventListenerOPEN');
+      console.log(socket);
+    });
+
+
+
     var IMusic = 'internet';
     var dis = 4;
 
