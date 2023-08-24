@@ -96,19 +96,39 @@
       <div>
         <div style="background-color: red;" id="ggo" class="custom-button">커스텀하러가기</div>
       </div>
+      <form id="name">
+        <input type="text" placeholder="아무거나">
+        <button type="submit">asdfsdfsdssssssssssssssssss</button>
+      </form>
     </div>
   </div>
 </body>
 
-
+  <script src="/socket.io/socket.io.js"></script> 
   <script>
-
-    const socket = new WebSocket(`ws://${window.location.host}`);
     
-    socket.addEventListener("open",()=> {
-      console.log('addEventListenerOPEN');
-      console.log(socket);
+    // const socket = new WebSocket(`ws://${window.location.host}`);
+    const socket = io();
+
+    const form = document.getElementById("name");
+    console.log(form);
+    function handleRoomSummit(event){
+      event.preventDefault();
+      const input = form.querySelector("input");
+      socket.emit("room",input.value,() => {console.log('done');});
+      input.value = "";
+    }
+
+    form.addEventListener("submit",handleRoomSummit);
+
+    socket.on("welcome", ()=> {
+      console.log('hi');
     });
+
+    // socket.addEventListener("open",()=> {
+    //   console.log('addEventListenerOPEN');
+    //   console.log(socket);
+    // });
 
 
 
