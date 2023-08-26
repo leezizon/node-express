@@ -69,6 +69,7 @@
             });
 
             socket.on("updateGuestList", (List)=>{
+                console.log('업데이트됩니다');
                 userList = List;
                 ctx.clearRect(0,0,canvas.width,canvas.height);
                 background.draw();
@@ -91,9 +92,9 @@
                 for (let i = userList.length - 1; i >= 0; i--){
                     if(userList[i].id === id){
                         userList.splice(i,1);
-                        socket.emit("updateGuestList",userList);
                     }
                 }
+                socket.emit("updateGuestList",userList);
                 console.log('누군가 나감');
                 console.log(userList);
             });

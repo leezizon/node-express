@@ -47,7 +47,8 @@ io.on("connection",(socket)=>{
     console.log(guestList);
     console.log(userList);
     // socket.emit("updateGuestList",userList);
-    socket.rooms.forEach((room)=>socket.to(room).emit("updateGuestList",userList));
+    // socket.rooms.forEach((room)=>socket.to(room).emit("updateGuestList",userList));
+    io.to('asd').emit("updateGuestList", userList);
   });
 
   // socket.emit("updateGuestList", (guestList) =>{
@@ -58,15 +59,15 @@ io.on("connection",(socket)=>{
   // });
 
   socket.on("disconnecting", () =>{
-    socket.rooms.forEach((room)=>socket.to(room).emit("bye",socket.id));
-    console.log('비교');
-    console.log(socket.id);
-    console.log(guestList);
-    for (let i = guestList.length - 1; i >= 0; i--){
-      if(guestList[i]===socket.id){
-        guestList.splice(i,1);
-        console.log(socket.id);
-        console.log('나감');
+    if(userList.length == 1){
+      userList.splice(0,1);
+    }else{
+      socket.rooms.forEach((room)=>socket.to(room).emit("bye",socket.id));
+      for (let i = guestList.length - 1; i >= 0; i--){
+        if(guestList[i]===socket.id){
+          guestList.splice(i,1);
+          console.log('나감');
+        }
       }
     }
   });
