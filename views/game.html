@@ -1,0 +1,173 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <canvas id="myCanvas" width="800" height="600"></canvas>
+        <script src="/socket.io/socket.io.js"></script> 
+        <script>
+            var canvas = document.getElementById('myCanvas');
+            var ctx = canvas.getContext('2d');
+
+            var b_img = new Image();
+            b_img.src = 'pan.jpg';
+
+            var userList = [];
+            var userMe = 'asd';
+
+            var background = {
+                x : 0,
+                y : 0,
+                width : 800,
+                height : 600,
+                draw(){
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(this.x,this.y,this.width,this.height);
+                    ctx.drawImage(b_img,0,0);
+                }
+            }
+
+
+
+
+
+            // 유저 생성 함수
+            function createUser(id, x, y) {
+                userList.push({ id, x, y, width: 100, height: 100, speed: 200});
+                console.log('생성됨');
+            }
+
+            const socket = io();
+
+            // console.log(socket);
+
+            // socket.on("guestId", (id)=>{
+            //     ball_id.push(id);
+            // });
+
+            socket.emit("room",'asd');
+
+            socket.on("guestList", (guestList,guest,userListt)=>{
+                userMe = guest;
+                // console.log(guestList);
+                //기존유저생성
+                createUser(guest,50,50);
+                for (let i = userListt.length - 1; i >= 0; i--){
+                    createUser(userListt[i].id,userListt[i].x,userListt[i].y);    
+                }
+                //유저 백엔드로 보내기
+                socket.emit("updateGuestList",userList);
+                
+                //기존유저,새유저위치
+                for (let i = userList.length - 1; i >= 0; i--){
+                    const user = userList[i];
+                    console.log(user);
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(user.x,user.y,user.width,user.height); 
+                } 
+                console.log(userList.length);
+            });
+
+            socket.on("updateGuestList", (List)=>{
+                userList = List;
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                background.draw();
+                for (let i = userList.length - 1; i >= 0; i--){
+                        const user = userList[i];
+                        if(user.id === userMe){
+                            // user.x = user.x + 200;
+                            ctx.fillStyle = 'red';
+                            console.log();
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        }else{
+                            ctx.fillStyle = 'green';
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        } 
+                    }
+                console.log(userList);
+            });
+
+            socket.on("bye",(id) =>{
+                for (let i = userList.length - 1; i >= 0; i--){
+                    if(userList[i].id === id){
+                        userList.splice(i,1);
+                        socket.emit("updateGuestList",userList);
+                    }
+                }
+                console.log('누군가 나감');
+                console.log(userList);
+            });
+
+
+            
+
+            b_img.onload = function(){
+                background.draw();
+            }
+
+
+            document.addEventListener('keydown',function(e){
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                background.draw();
+                if (e.code == 37 || e.key == "ArrowRight"){
+                    for (let i = userList.length - 1; i >= 0; i--){
+                        const user = userList[i];
+                        if(user.id === userMe){
+                            user.x = user.x + 200;
+                            ctx.fillStyle = 'red';
+                            console.log();
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        }else{
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        } 
+                    }
+                    socket.emit("updateGuestList",userList); 
+                } else if(e.key == 39 || e.key == "ArrowLeft") {
+                    for (let i = userList.length - 1; i >= 0; i--){
+                        const user = userList[i];
+                        if(user.id === userMe){
+                            user.x = user.x - 200;
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        }
+                        else{
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        }
+                    }
+                    socket.emit("updateGuestList",userList); 
+                }
+                else if(e.key == 38 || e.key == "ArrowUp") {
+                    for (let i = userList.length - 1; i >= 0; i--){
+                        const user = userList[i];
+                        if(user.id === userMe){
+                            user.y = user.y - 200;
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        }else{
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        }
+                    }
+                    socket.emit("updateGuestList",userList); 
+                }
+                else if(e.key == 40 || e.key == "ArrowDown") {
+                    for (let i = userList.length - 1; i >= 0; i--){
+                        const user = userList[i];
+                        if(user.id === userMe){
+                            user.y = user.y + 200;
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        }else{
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                        }
+                    }
+                    socket.emit("updateGuestList",userList); 
+                }
+            })
+
+        </script>
+    </body>
+</html>

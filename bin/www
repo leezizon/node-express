@@ -23,17 +23,52 @@ app.set('port', port);
 
 var server = http.createServer(app);
 const io = new Server(server);
+var guestList = [];
+var userList = [];
+
 
 // const sockets = [];
 io.on("connection",(socket)=>{
+  socket.onAny((event)=>{
+    console.log(event);
+  });
   // sockets.push(socket);
-  console.log(socket);
-  socket.on("room", (room,done) =>{
-    console.log(socket.rooms);
-    socket.join(room);
-    console.log(socket.rooms);
-    done();
-    socket.to(room).emit("welcome");
+  // console.log(socket.id);
+  // socket.emit("guestId",socket.id);
+  socket.on("room", (roomName) =>{
+    socket.join(roomName);
+    guestList.push(socket.id);
+    console.log(guestList);
+    socket.emit("guestList",guestList,socket.id,userList);
+  });
+
+  socket.on("updateGuestList", (List) =>{
+    userList = List;
+    console.log(guestList);
+    console.log(userList);
+    // socket.emit("updateGuestList",userList);
+    socket.rooms.forEach((room)=>socket.to(room).emit("updateGuestList",userList));
+  });
+
+  // socket.emit("updateGuestList", (guestList) =>{
+  //   socket.join(roomName);
+  //   guestList.push(socket.id);
+  //   console.log(guestList);
+  //   socket.emit("guestList",guestList,socket.id);
+  // });
+
+  socket.on("disconnecting", () =>{
+    socket.rooms.forEach((room)=>socket.to(room).emit("bye",socket.id));
+    console.log('비교');
+    console.log(socket.id);
+    console.log(guestList);
+    for (let i = guestList.length - 1; i >= 0; i--){
+      if(guestList[i]===socket.id){
+        guestList.splice(i,1);
+        console.log(socket.id);
+        console.log('나감');
+      }
+    }
   });
 });
 
