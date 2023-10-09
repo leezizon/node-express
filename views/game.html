@@ -10,10 +10,27 @@
             var ctx = canvas.getContext('2d');
 
             var b_img = new Image();
+
+            var userImg1 = new Image();
+            var userImg2 = new Image();
+            var userImg3 = new Image();
+            var userImg4 = new Image();
+
             b_img.src = 'pan.jpg';
+
+            userImg1.src = 'dance/1.png';
+            userImg2.src = 'dance/2.png';
+            userImg3.src = 'dance/3.png';
+            userImg4.src = 'dance/4.png';
+
+            userImgList = [userImg1,userImg2,userImg3,userImg4];
 
             var userList = [];
             var userMe = 'asd';
+
+            var Mstate = 'y';
+            var userXMove = 0;
+            var userYMove = 0;
 
             var background = {
                 x : 0,
@@ -28,66 +45,59 @@
             }
 
 
-
-
-
             // 유저 생성 함수
-            function createUser(id, x, y) {
-                userList.push({ id, x, y, width: 100, height: 100, speed: 200});
+            function createUser(id, x, y,Sn) {
+                userList.push({ id, x, y, width: 100, height: 100, speed: 200, imgSn : Sn});
                 console.log('생성됨');
             }
 
             const socket = io();
 
-            // console.log(socket);
-
-            // socket.on("guestId", (id)=>{
-            //     ball_id.push(id);
-            // });
-
             socket.emit("room",'asd');
 
-            socket.on("guestList", (guestList,guest,userListt)=>{
+            socket.on("guestList", (guestList,guest,userListt,userImgSn)=>{
                 userMe = guest;
-                // console.log(guestList);
                 //기존유저생성
-                createUser(guest,50,50);
+                createUser(guest,50,50,userImgSn);
+                console.log(userImgSn);
                 for (let i = userListt.length - 1; i >= 0; i--){
-                    createUser(userListt[i].id,userListt[i].x,userListt[i].y);    
+                    createUser(userListt[i].id,userListt[i].x,userListt[i].y,userListt[i].imgSn);
                 }
                 //유저 백엔드로 보내기
                 socket.emit("updateGuestList",userList);
                 
-                //기존유저,새유저위치
-                for (let i = userList.length - 1; i >= 0; i--){
-                    const user = userList[i];
-                    console.log(user);
-                    ctx.fillStyle = 'red';
-                    ctx.fillRect(user.x,user.y,user.width,user.height); 
-                } 
-                console.log(userList.length);
+                // 기존유저,새유저위치
+                // for (let i = userList.length - 1; i >= 0; i--){
+                //     const user = userList[i];
+                //     ctx.fillStyle = 'red';
+                //     ctx.fillRect(user.x,user.y,user.width,user.height); 
+                // } 
             });
 
+
+            //서버수신
             socket.on("updateGuestList", (List)=>{
                 console.log('업데이트됩니다');
                 userList = List;
                 ctx.clearRect(0,0,canvas.width,canvas.height);
                 background.draw();
                 for (let i = userList.length - 1; i >= 0; i--){
+                    setTimeout(() => {
                         const user = userList[i];
                         if(user.id === userMe){
-                            // user.x = user.x + 200;
                             ctx.fillStyle = 'red';
-                            console.log();
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
                         }else{
                             ctx.fillStyle = 'green';
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
                         } 
-                    }
+                        ctx.fillRect(user.x,user.y,user.width,user.height);
+                        ctx.drawImage(userImgList[user.imgSn],user.x,user.y);
+                    })
+                }
                 console.log(userList);
             });
 
+
+            //누군가 나갔을 때 서버수신
             socket.on("bye",(id) =>{
                 for (let i = userList.length - 1; i >= 0; i--){
                     if(userList[i].id === id){
@@ -100,73 +110,42 @@
             });
 
 
-            
-
             b_img.onload = function(){
                 background.draw();
             }
 
 
+
+            //키다운이벤트 플레이어 서버송신
             document.addEventListener('keydown',function(e){
                 ctx.clearRect(0,0,canvas.width,canvas.height);
                 background.draw();
                 if (e.code == 37 || e.key == "ArrowRight"){
-                    for (let i = userList.length - 1; i >= 0; i--){
-                        const user = userList[i];
-                        if(user.id === userMe){
-                            user.x = user.x + 200;
-                            ctx.fillStyle = 'red';
-                            console.log();
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
-                        }else{
-                            ctx.fillStyle = 'red';
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
-                        } 
-                    }
-                    socket.emit("updateGuestList",userList); 
+                    Mstate = 'x';
+                    userXMove = 200;
                 } else if(e.key == 39 || e.key == "ArrowLeft") {
-                    for (let i = userList.length - 1; i >= 0; i--){
-                        const user = userList[i];
-                        if(user.id === userMe){
-                            user.x = user.x - 200;
-                            ctx.fillStyle = 'red';
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
-                        }
-                        else{
-                            ctx.fillStyle = 'red';
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
-                        }
-                    }
-                    socket.emit("updateGuestList",userList); 
+                    Mstate = 'x';
+                    userXMove = -200;
                 }
                 else if(e.key == 38 || e.key == "ArrowUp") {
-                    for (let i = userList.length - 1; i >= 0; i--){
-                        const user = userList[i];
-                        if(user.id === userMe){
-                            user.y = user.y - 200;
-                            ctx.fillStyle = 'red';
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
-                        }else{
-                            ctx.fillStyle = 'red';
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
-                        }
-                    }
-                    socket.emit("updateGuestList",userList); 
+                    Mstate = 'y';
+                    userYMove = -200;
                 }
                 else if(e.key == 40 || e.key == "ArrowDown") {
-                    for (let i = userList.length - 1; i >= 0; i--){
+                    Mstate = 'y';
+                    userYMove = 200;
+                }
+                for (let i = userList.length - 1; i >= 0; i--){
                         const user = userList[i];
                         if(user.id === userMe){
-                            user.y = user.y + 200;
-                            ctx.fillStyle = 'red';
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
-                        }else{
-                            ctx.fillStyle = 'red';
-                            ctx.fillRect(user.x,user.y,user.width,user.height);
+                            if(Mstate == 'x'){
+                                user.x = user.x + userXMove;
+                            }else{
+                                user.y = user.y + userYMove;
+                            }
                         }
                     }
-                    socket.emit("updateGuestList",userList); 
-                }
+                socket.emit("updateGuestList",userList);
             })
 
         </script>
