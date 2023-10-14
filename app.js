@@ -5,12 +5,21 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const nunjucks = require('nunjucks');
+const cors = require('cors');
 
 var indexRouter = require('./routes/index');
 // var usersRouter = require('./routes/users');
 
 var app = express();
 
+//다른 도메인에서도 api를 쓸수있도록 앱에 cors설정
+app.use(cors());
+const corsOptions = {
+  origin: 'https://port-0-node-express-eu1k2lllm51c76.sel3.cloudtype.app'
+};
+app.use(cors(corsOptions));
+
+//라우더설정
 app.use('/', indexRouter);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

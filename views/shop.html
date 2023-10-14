@@ -3,75 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    margin: 0;
-    padding: 0;
-    }
-
-    header {
-        background-color: #3498db;
-        color: #fff;
-        text-align: center;
-        padding: 20px 0;
-    }
-
-    h1 {
-        margin: 0;
-    }
-
-    main {
-        max-width: 800px;
-        margin: 20px auto;
-        padding: 20px;
-        background-color: #fff;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .product {
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-    }
-
-    img {
-        max-width: 100px;
-        max-height: 100px;
-        margin-right: 20px;
-    }
-
-    .product-details {
-        flex: 1;
-    }
-
-    h2 {
-        font-size: 24px;
-        margin: 0;
-        color: #333;
-    }
-
-    p {
-        color: #666;
-    }
-
-    .price {
-        font-weight: bold;
-        color: #e74c3c;
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
   <title>상품 판매 게시판</title>
 </head>
 <body>
-    <header>
-        <h1>상품 판매 게시판</h1>
-    </header>
+  {% include "header.html" %}
     <main id ='table-container'>
         <!-- 다른 상품들을 여기에 추가 -->
     </main>
+    <button onclick="asas()">asdasdasd</button>
 </body>
   <script>
     //상점조회
@@ -85,26 +25,44 @@
     });
 
     //상점구매
-    // function postData(button) {
-    //     const row = button.closest('tr'); // 버튼이 포함된 행 가져오기
-    //     const name = row.cells[0].textContent; // 첫 번째 셀(이름) 값 가져오기
-    //     const email = row.cells[1].textContent; // 두 번째 셀(이메일) 값 가져오기
+    function postData(PdId) {
+      const jsonData = JSON.stringify({ PdId });
+      fetch('/save', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: jsonData
+      })
+      .then(response => response.text())
+      .then(data => {
+        console.log(data);
+        if(data === "T"){
+          alert('구매성공');
+        }else{
+          alert('구매실패');
+        }
+      })
+      .catch(error => {
+        console.error('데이터 삽입 오류:', error);
+      });
+    }    
 
-    //     // AJAX를 사용하여 값을 서버로 전송
-    //     const xhr = new XMLHttpRequest();
-    //     xhr.open('POST', '/save', true);
-    //     xhr.setRequestHeader('Content-Type', 'application/json');
 
-    //         xhr.onreadystatechange = function() {
-    //             if (xhr.readyState === 4 && xhr.status === 200) {
-    //                 // 서버 응답 처리
-    //                 console.log('데이터가 성공적으로 전송되었습니다.');
-    //             }
-    //         };
-
-    //         const data = JSON.stringify({ name: name, email: email });
-    //         xhr.send(data);
-    //     }    
+    function asas(){
+      const asd = 'asd'
+      const jsonData = JSON.stringify({ asd });
+      fetch('/test', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: jsonData
+      })
+      .catch(error => {
+        console.error('데이터 삽입 오류:', error);
+      });
+    }
 
   </script>
 </html>

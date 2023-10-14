@@ -32,15 +32,11 @@ io.on("connection",(socket)=>{
     console.log(event);
   });
 
-  console.log('snrnsrk 커넥션');
-
   
   socket.on("room", (roomName) =>{
     // close the database connection
-
     socket.join(roomName);
     guestList.push(socket.id);
-    console.log(guestList);
     socket.emit("guestList",guestList,socket.id,userList,userImgSn);
     if(userImgSn < 3){
       userImgSn = userImgSn + 1;

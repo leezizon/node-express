@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <title>마이페이지</title>
+</head>
+<body>
+    {% include "header.html" %}
+    <main id ='profile'>
+
+    </main>
+    <main id ='table-container'>
+        <section class="purchase-history">
+            <h2>구매 목록</h2>
+            <ul>
+                <li>상품 1 - 가격: $50</li>
+                <li>상품 2 - 가격: $75</li>
+                <!-- 다른 구매 목록 항목을 여기에 추가 -->
+            </ul>
+        </section>
+    </main>
+    <script>
+        //상점조회
+        fetch('/myPagePd') // '/query' 엔드포인트를 호출
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('profile').innerHTML = data.profile;
+          document.getElementById('table-container').innerHTML = data.pd;
+        })
+        .catch(error => {
+          console.error('데이터 가져오기 오류:', error);
+        });
+    </script>
+</body>
+</html>

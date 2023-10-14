@@ -81,48 +81,6 @@
 </body>
 
   <script>
-     // //서버에 아이디,비번값 비교 (세션 관련 x)
-    // document.addEventListener("DOMContentLoaded", function () {
-    // document.getElementById('login-form').addEventListener('submit', (e) => {
-    //     e.preventDefault();
-        
-    //     const formData = document.getElementById('login-form');
-    //     const email = formData.email.value;
-    //     const password = formData.password.value;
-
-    //     alert(email);
-
-    //     const jsonData = JSON.stringify({ email, password});
-
-    //     // 여기에서 로그인 처리 또는 인증 로직을 추가할 수 있습니다.
-    //     // 예를 들어, 서버로 요청을 보내거나 로컬 스토리지에 정보를 저장할 수 있습니다.
-    //     fetch('/login', {
-    //       method: 'POST',
-    //        headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //       body: jsonData
-    //     })
-    //       .then(response => response.text())
-    //       .then(data => {
-    //         //document.getElementById('table-container').innerHTML = data;
-    //         e.target.reset(); // 입력 폼 리셋
-    //     })
-    //     .catch(error => {
-    //       console.error('데이터 삽입 오류:', error);
-    //     });
-
-    //     // 간단한 예시:
-    //     // if (username === "사용자명" && password === "비밀번호") {
-    //     //     alert("로그인 성공!");
-    //     // } else {
-    //     //     alert("로그인 실패. 사용자명과 비밀번호를 확인하세요.");
-    //     // }
-    //   });
-    // });
-
-
-
     fetch('/leeQu') // '/query' 엔드포인트를 호출
     .then(response => response.text())
     .then(data => {
