@@ -2,7 +2,8 @@
 <html>
 <head>
   <title>로그인</title>
-  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
     font-family: Arial, sans-serif;
@@ -54,7 +55,6 @@
         background-color: #0056b3;
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -74,22 +74,9 @@
             <a href="/logout">로그아웃</a>
         </form>
     </div>
-    <div id="table-container" class="login-container">
-      <!-- 백엔드에서 생성한 표가 여기에 삽입됩니다. -->
-    </div>
 </body>
 </body>
 
   <script>
-    fetch('/leeQu') // '/query' 엔드포인트를 호출
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById('table-container').innerHTML = data;
-    })
-    .catch(error => {
-      console.error('데이터 가져오기 오류:', error);
-    });
-
-
   </script>
 </html>

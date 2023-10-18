@@ -116,46 +116,6 @@ router.get('/', ensureAuthenticated, (req, res) => {
 });
 
 
-
-router.get('/leeQu', function(req, res, next) {
-  
-  let db = new sqlite3.Database('./public/db/chinook.db', (err) => {
-    if (err) {
-        console.error(err.message);
-    }
-    console.log('Connected to the chinook database.');
-  });
-  
-  db.all('SELECT * FROM student', (err, rows) => {
-    if (err) {
-      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
-    }
-    console.log(rows);
-
-    // HTML 표 생성
-    let tableHtml = '<table>';
-
-    rows.forEach((row) => {
-      tableHtml += `<tr><td>${row.id}</td><td>${row.name}</td><td>${row.email}</td><td>${row.password}</td></tr>`;
-    });
-
-    tableHtml += '</table>';
-
-    // 렌더링된 HTML을 클라이언트로 보냄
-    res.send(tableHtml);
-
-    //close the database connection
-    db.close((err) => {
-      if (err) {
-        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
-      } else {
-        console.log('데이터베이스 연결이 종료되었습니다.');
-      }
-    });
-  });
-});
-
-
 //상품
 router.get('/leePd', function(req, res, next) {
   
@@ -212,7 +172,7 @@ router.post('/test', function(req, res) {
     console.log('Connected to the chinook database.');
   });
 
-  db.run('INSERT INTO music ( email, score, musicNm) VALUES (?, ?, ?)', [req.body.enteredEmail,req.body.playMusic,req.body.playedScore], function(err) {
+  db.run('INSERT INTO music ( email, musicNm,score) VALUES (?, ?, ?)', [req.body.enteredEmail,req.body.playMusic,req.body.playedScore], function(err) {
     if (err) {
       console.log('인서트에인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러 에러');
       return console.error(err.message);
@@ -369,11 +329,6 @@ router.get('/leeG', function(req, res, next) {
 });
 
 
-router.get('/index', function(req, res, next) {
-  res.render('index.html');
-});
-
-
 //게임 스코어 페이지
 router.get('/gameScore', function(req, res, next) {
   res.render('gameScore.html');
@@ -387,21 +342,23 @@ router.get('/selectGameScore', function(req, res, next) {
     console.log('Connected to the chinook database.');
   });
   
-  db.all('SELECT * FROM music', (err, rows) => {
+  db.all('SELECT * FROM music ORDER BY score DESC LIMIT 5', (err, rows) => {
     if (err) {
       return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
     }
 
     // HTML 표 생성
-    let tableHtml = '<table> <tr><th>Email</th><th>Password</th><th>Points</th></tr>';
-
+    let tableHtml = '<table> <tr><th>ranking</th><th>Email</th><th>Music</th><th>Score</th></tr>';
+    var scoreLen = 0;
     rows.forEach((row) => {
-      tableHtml += `<tr><td>${row.email}</td><td>${row.score}</td><td>${row.musicNm}</td></tr>`;
+      scoreLen = scoreLen + 1;
+      tableHtml += `<tr><td>${scoreLen}</td><td>${row.email}</td><td>${row.musicNm}</td><td>${row.score}</td></tr>`;
     });
 
     tableHtml += '</table>';
 
     // 렌더링된 HTML을 클라이언트로 보냄
+    res.header("Access-Control-Allow-Origin", "*");
     res.send(tableHtml);
 
     //close the database connection

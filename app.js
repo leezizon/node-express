@@ -16,6 +16,7 @@ var app = express();
 app.use(cors());
 const corsOptions = {
   origin: 'https://port-0-node-express-eu1k2lllm51c76.sel3.cloudtype.app'
+  //origin: 'http://localhost:3000'
 };
 app.use(cors(corsOptions));
 
