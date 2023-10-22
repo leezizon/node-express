@@ -12,7 +12,6 @@
     <main id ='table-container'>
         <!-- 다른 상품들을 여기에 추가 -->
     </main>
-    <button onclick="asas()">asdasdasd</button>
 </body>
   <script>
     //상점조회
@@ -27,6 +26,7 @@
 
     //상점구매
     function postData(PdId) {
+      var MoneyNone = 0;
       const jsonData = JSON.stringify({ PdId });
       fetch('/save', {
             method: 'POST',
@@ -38,16 +38,23 @@
       .then(response => response.text())
       .then(data => {
         console.log(data);
-        if(data === "T"){
+        if(!data == ''){
           alert('구매성공');
-        }else{
-          alert('구매실패');
+          MoneyNone = 1;
         }
       })
       .catch(error => {
         console.error('데이터 삽입 오류:', error);
       });
-    }    
+
+    setTimeout(function() {
+      if(MoneyNone == 0){
+        alert('돈이없어요!!');
+      }
+    },1000)
+    }
+
+    
 
 
     function asas(){

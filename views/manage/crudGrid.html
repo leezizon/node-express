@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>로그인</title>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <link rel="icon" href="/images/favicon.ico">
+  <style>
+    body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+    .login-container {
+      display: flex;
+    }
+
+    .pad {
+        margin: 15px; /* 여백을 늘립니다. */
+    }
+
+    table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 15px; /* 여백을 늘립니다. */
+            text-align: center;
+        }
+
+        th {
+            background-color: #3498db;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        td {
+            font-size: 18px;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+
+        .input-container {
+  display: block;
+  margin-bottom: 20px;
+}
+
+  .custom-input {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    outline: none;
+  }
+
+  .custom-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+  }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <body>
+    <div class="input-container">
+      <div class="input-container">
+        <input type="text" class="custom-input" id="inputField" placeholder="여기에 입력하세요">
+        <button class="custom-button" id="submitButton">전송</button>
+      </div>
+      <div class="login-container">
+        <div class="pad">
+          <h2>아이템</h2>
+          <div id="table-container" class="login-container">
+              <!-- 백엔드에서 생성한 표가 여기에 삽입됩니다. -->
+            </div>
+          </div>
+          <div class="pad">
+          <h2>금액</h2>
+          <div id="table-container2" class="login-container">
+              <!-- 백엔드에서 생성한 표가 여기에 삽입됩니다. -->
+          </div>
+        </div>
+      </div>
+    </div>
+</body>
+</body>
+
+  <script>
+    document.getElementById('submitButton').addEventListener('click', function() {
+      var inputValue = document.getElementById('inputField').value;
+      if(inputValue == ''){
+        alert('비었습니다');
+        return
+      }
+      const jsonData = JSON.stringify({ inputValue });
+
+      fetch('/selectManageGrid',{
+        method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: jsonData
+        }) // '/query' 엔드포인트를 호출
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('table-container').innerHTML = data;
+    })
+    .catch(error => {
+      console.error('데이터 가져오기 오류:', error);
+    });
+
+    fetch('/selectManageMoneyGrid',{
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json'
+        },
+        body: jsonData
+    }) // '/query' 엔드포인트를 호출
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('table-container2').innerHTML = data;
+    })
+    .catch(error => {
+      console.error('데이터 가져오기 오류:', error);
+    });
+    });
+
+
+  </script>
+</html>

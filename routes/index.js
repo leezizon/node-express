@@ -33,7 +33,7 @@ passport.use(new LocalStrategy(
     });
 
     //데이터베이스에서 사용자 확인
-    db.get("SELECT * FROM student WHERE email = ? AND password = ?", [username, password], (err, row) => {
+    db.get("SELECT * FROM users WHERE email = ? AND password = ?", [username, password], (err, row) => {
       if (err) {
             console.log('로그인 tlfvo');
             return done(null, false);
@@ -61,7 +61,7 @@ passport.deserializeUser((id, done) => {
   });
 
   //데이터베이스에서 사용자 확인
-  db.get("SELECT * FROM student WHERE id = ?", [id], (err, row) => {
+  db.get("SELECT * FROM users WHERE id = ?", [id], (err, row) => {
     if (err) {
           console.log('로그인 tlfvo');
           return done(null, false);
@@ -139,7 +139,7 @@ router.get('/leePd', function(req, res, next) {
       tableHtml += `
       <input type="text" value="${row.PdId}" id="Pd_${row.PdId}" style="display: none;">
       <section class="product">
-      <img src="shopitem/ebool_${row.PdId}.png" alt="상품 이미지">
+      <img src="shopitem/${row.PdId}.png" alt="상품 이미지">
       <div class="product-details">
       <h2>${row.PdNm}</h2>
       <p>상품설명상품설명상품설명상품설명상품설명상품설명상품설명.</p>
@@ -214,11 +214,11 @@ router.post('/save', function(req, res) {
           b_product_cost = row.PdPrice;
           b_product_cnt = row.PdCnt;
           b_product_nm = row.PdNm;
+          //물건값보다 돈이 없으면 실패
           if (-1 < user_money - b_product_cost){
-            PD_U_A_D(req.user.id, b_product_id,b_product_cnt-1,b_product_nm, user_money - b_product_cost);
+            PD_U_A_D(req.user.id, b_product_id,b_product_cnt-1,b_product_nm, user_money - b_product_cost, req.user.name);
             res.json('T');
           }else{
-            res.json('F');
           }
         })
       });
@@ -226,7 +226,7 @@ router.post('/save', function(req, res) {
   });
 
   //db 업데이트 인서트
-  function PD_U_A_D(id, b_pd_id,b_pd_cnt,b_pd_nm, f_m) {
+  function PD_U_A_D(id, b_pd_id,b_pd_cnt,b_pd_nm, f_m,user_name) {
   db.run('UPDATE product SET PdCnt = ? WHERE PdId = ?', [b_pd_cnt, b_pd_id], function(err) {
     if (err) {
       return console.error(err.message);
@@ -241,7 +241,7 @@ router.post('/save', function(req, res) {
     console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
   });
 
-  db.run('INSERT INTO assets (assetsWithUserId, PdNm, PdId, useSn) VALUES (?, ?, ?, ?)', [id,b_pd_nm,b_pd_id,'Y'], function(err) {
+  db.run('INSERT INTO assets (assetsWithUserId, PdNm, PdId, useSn,name) VALUES (?, ?, ?, ?, ?)', [id,b_pd_nm,b_pd_id,'Y',user_name], function(err) {
     if (err) {
       return console.error(err.message);
       console.log('인서트에인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러 에러');
@@ -301,7 +301,7 @@ router.get('/myPagePd',ensureAuthenticated, (req, res) => {
       rows.forEach((row) => {
         tableHtml += `
         <section class="product">
-        <img src="shopitem/ebool_${row.PdId}.png" alt="상품 이미지">
+        <img src="shopitem/${row.PdId}.png" alt="상품 이미지">
         <div class="product-details">
         <h2>${row.PdNm}</h2>
         <p>상품설명상품설명상품설명상품설명상품설명상품설명상품설명.</p>
@@ -372,5 +372,125 @@ router.get('/selectGameScore', function(req, res, next) {
   });
 });
 
+
+//관리자 페이지
+router.get('/manageGrid', function(req, res, next) {
+  if(req.user.id == '5'){
+    res.render('manage/CRUDGrid.html'); 
+  }
+});
+
+router.post('/selectManageGrid', function(req, res, next) {
+
+  // 조건에 사용할 변수
+  const condition = req.body.inputValue; // 예시: 조건 변수
+
+  // 업데이트할 쿼리 문자열 생성
+  let query = `SELECT * FROM assets`;
+
+  // 조건 변수가 빈 값이 아닌 경우에만 해당 조건을 포함
+  if (condition !== '') {
+    query += ` WHERE name = ?`;
+  }
+
+  // 쿼리 실행
+  const parameters = [];
+  if (condition !== '') {
+    parameters.push(condition);
+  }
+
+  let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+  
+  db.all(query, parameters, (err, rows) => {
+    if (err) {
+      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
+    }
+
+    // HTML 표 생성
+    let tableHtml = '<table> <tr>   <th></th><th>유저번호</th><th>물건이름</th><th>사용중여부</th></tr>';
+    rows.forEach((row) => {
+      tableHtml += `<tr><td>${row.assetsId}</td><td>${row.name}</td><td>${row.PdNm}</td><td>${row.useSn}</td></tr>`;
+    });
+
+    tableHtml += '</table>';
+
+    // 렌더링된 HTML을 클라이언트로 보냄
+    res.header("Access-Control-Allow-Origin", "*");
+    res.send(tableHtml);
+
+    //close the database connection
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+      } else {
+        console.log('데이터베이스 연결이 종료되었습니다.');
+      }
+    });
+  });
+});
+
+router.post('/selectManageMoneyGrid', function(req, res, next) {
+  
+  // 조건에 사용할 변수
+  const condition = req.body.inputValue; // 예시: 조건 변수
+
+  // 업데이트할 쿼리 문자열 생성
+  let query = `SELECT * FROM user_M`;
+
+  // 조건 변수가 빈 값이 아닌 경우에만 해당 조건을 포함
+  if (condition !== '') {
+    query += ` WHERE name = ?`;
+  }
+
+  // 쿼리 실행
+  const parameters = [];
+  if (condition !== '') {
+    parameters.push(condition);
+  }
+  
+  let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+  
+  db.all(query,parameters , (err, rows) => {
+    if (err) {
+      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
+    }
+
+    // HTML 표 생성
+    let tableHtml = '<table> <tr><th>유저번호</th><th>자산</th><th>포인트</th></tr>';
+    rows.forEach((row) => {
+      tableHtml += `<tr><td>${row.name}</td><td>${row.Money}</td><td>${row.SpeP}</td></tr>`;
+    });
+
+    tableHtml += '</table>';
+
+    // 렌더링된 HTML을 클라이언트로 보냄
+    res.header("Access-Control-Allow-Origin", "*");
+    res.send(tableHtml);
+
+    //close the database connection
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+      } else {
+        console.log('데이터베이스 연결이 종료되었습니다.');
+      }
+    });
+  });
+});
+
+//로비 페이지
+router.get('/loby', function(req, res, next) {
+  res.render('loby.html'); 
+});
 
 module.exports = router;
