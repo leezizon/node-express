@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+  /* 페이지 스타일 및 배경 이미지 설정 */
+  body {
+    background-image: url('splatoon/loby.png'); /* 배경 이미지 경로 설정 */
+    background-size: cover; /* 이미지를 화면 크기에 맞게 조절 */
+    background-repeat: no-repeat; /* 이미지 반복 없음 */
+    background-attachment: fixed; /* 스크롤 시 배경 이미지 고정 */
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+
+  /* 모달 스타일 */
+  .modal {
+    display: none; /* 모달 숨김 */
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* 배경 어둡게 */
+  }
+
+  /* 모달 컨텐츠 스타일 */
+  .modal-content {
+    background-color: #f4f4f4;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 20%;
+  }
+
+  /* 모달 닫기 버튼 스타일 */
+  .close {
+    color: #888;
+    float: right;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .ball {
+  width: 205px;
+  height: 202px;
+  background-image: url('splatoon/ball.png'); /* 이미지 경로를 수정 */
+  background-size: cover;
+  position: absolute;
+  bottom: 0;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0% {left:45%; bottom: 500px; }
+  20%{left:45%; bottom: 200px; }
+  40%{left:45%; bottom: 300px; }
+  60%{left:45%; bottom: 200px; }
+  80%{left:45%; bottom: 250px; }
+  100%{left: 45%; bottom: 200px; }
+}
+  </style>
+  <title>뽑기</title>
+</head>
+<body>
+    <div>
+        <img src="splatoon/city.png" alt="Image" width="600" height="360">
+    </div>
+    <div id="randomButton">
+        <img src="splatoon/can.png" alt="Button Image" width="600" height="651">
+    </div>
+    <div class="ball" id="ball" style="display: none;"></div>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <div id="content">
+                
+            </div>
+          <span class="close" id="closeModal">&times;</span>
+          <p id="modalResult"></p>
+          <!-- <img src="your-image.jpg" alt="이미지"> -->
+        </div>
+      </div>    
+</body>
+  <script>
+   document.getElementById('randomButton').addEventListener('click', function() {
+      var randomNumber = Math.random();
+      var result;
+
+      if (randomNumber <= 0.20) {
+        result = 1;
+      } else if (randomNumber <= 0.40) {
+        result = 2;
+      } else{
+        result = 3;
+      }
+      var ball = document.getElementById('ball');
+      if(result == 3){
+        var randomValue = Math.floor(Math.random() * 17) + 1; // 1부터 3까지의 무작위 정수
+        var modal = document.getElementById('myModal');
+        var modalResult = document.getElementById('modalResult');
+        document.getElementById('content').innerHTML = '<img src="splatoon/3emd/'+randomValue+'.png">'
+      }else if(result == 2){
+        var randomValue = Math.floor(Math.random() * 10) + 18; // 1부터 3까지의 무작위 정수
+        var modal = document.getElementById('myModal');
+        var modalResult = document.getElementById('modalResult');
+        document.getElementById('content').innerHTML = '<img src="splatoon/2emd/'+randomValue+'.png">'
+      }else{
+        var randomValue = Math.floor(Math.random() * 4) + 28; // 1부터 3까지의 무작위 정수
+        var modal = document.getElementById('myModal');
+        var modalResult = document.getElementById('modalResult');
+        document.getElementById('content').innerHTML = '<img src="splatoon/1emd/'+randomValue+'.png">'
+      }
+      document.getElementById('ball').style.display = 'block';
+      setTimeout(function() {
+        modal.style.display = 'block';
+        ball.style.display = 'none';
+      },1000)
+    });
+
+    // 모달 창 닫기 버튼
+    document.getElementById('closeModal').addEventListener('click', function() {
+      var modal = document.getElementById('myModal');
+      modal.style.display = 'none';
+    });
+
+  </script>
+</html>

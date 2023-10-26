@@ -78,7 +78,6 @@ passport.deserializeUser((id, done) => {
 
 
 function ensureAuthenticated(req, res, next) {
-  console.log(req.isAuthenticated());
   if (req.isAuthenticated()) {
     console.log('미들웨어');
     return next(); // 로그인 상태면 다음 미들웨어로 이동
@@ -374,14 +373,13 @@ router.get('/selectGameScore', function(req, res, next) {
 
 
 //관리자 페이지
-router.get('/manageGrid', function(req, res, next) {
-  if(req.user.id == '5'){
-    res.render('manage/CRUDGrid.html'); 
-  }
+router.get('/manageGrid', ensureAuthenticated,(req, res) => {
+    res.render('manage/crudGrid.html');
 });
 
 router.post('/selectManageGrid', function(req, res, next) {
 
+  if (req.user.id == 5){
   // 조건에 사용할 변수
   const condition = req.body.inputValue; // 예시: 조건 변수
 
@@ -431,11 +429,15 @@ router.post('/selectManageGrid', function(req, res, next) {
         console.log('데이터베이스 연결이 종료되었습니다.');
       }
     });
-  });
+  });  
+  }else{
+    res.send('<div>관리자만 조회할 수 있습니다</div>');    
+  }
+
 });
 
 router.post('/selectManageMoneyGrid', function(req, res, next) {
-  
+  if (req.user.id == 5){
   // 조건에 사용할 변수
   const condition = req.body.inputValue; // 예시: 조건 변수
 
@@ -486,6 +488,9 @@ router.post('/selectManageMoneyGrid', function(req, res, next) {
       }
     });
   });
+}else{
+  res.send('<div>관리자만 조회할 수 있습니다</div>');
+}
 });
 
 //로비 페이지
