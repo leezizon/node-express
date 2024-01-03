@@ -371,6 +371,128 @@ router.get('/selectGameScore', function(req, res, next) {
   });
 });
 
+//유저포지션
+router.get('/userPosition', function(req, res, next) {
+  res.render('userPosition.html');
+});
+
+router.get('/whenSeq', function(req, res, next) {
+  let whens = [];
+  const db = new sqlite3.Database('./public/db/userPosition.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+  
+  db.all('SELECT * FROM sixOfWhen ORDER BY whenV ASC', (err, rows) => {
+    if (err) {
+      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
+    }
+    var whenSn = 0;
+    rows.forEach(row => {
+      whenSn = whenSn +1;
+      whens.push({sn: whenSn, idx : row.idx, when: row.whenV});
+    });
+    // 렌더링된 HTML을 클라이언트로 보냄
+    res.header("Access-Control-Allow-Origin", "*");
+    res.send({ whens : whens});
+  });
+
+  //close the database connection
+  db.close((err) => {
+    if (err) {
+      console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+    } else {
+      console.log('데이터베이스 연결이 종료되었습니다.');
+    }
+  });
+});
+
+router.post('/selectUserPosition', function(req, res, next) {
+  let cnt;
+  let tableHtml;
+  let positions = [];
+
+
+  let query = `SELECT IDX,WHO,WHEN_EVENT,WHERE_EVENT,WHAT,X,Y,WHEN_EVENT_SEQ FROM sixPrinciples`;
+
+  //타임슬라이더 조건
+  // if (condition !== '') {
+  //   query += ` WHERE WHEN_EVENT_SEQ = ?`;
+  // }
+
+  //위 타임슬라이더 조건에 맞을시
+  // 쿼리 실행
+  // const parameters = [];
+  // if (condition !== '') {
+  //   parameters.push(condition);
+  // }
+
+  const db = new sqlite3.Database('./public/db/userPosition.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+  
+  db.all(query , (err, rows) => {
+    if (err) {
+      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
+    }
+    // HTML 표 생성
+    tableHtml = '<table id ="myTable"> <tbody><tr><th>N</th><th>WHO</th><th>WHEN</th><th>WHERE</th><th>WHAT</th><th>X</th><th>Y</th></tr>';
+    rows.forEach((row) => {
+      tableHtml += `<tr><td>${row.IDX}</td><td>${row.WHO}</td><td>${row.WHEN_EVENT}</td><td>${row.WHERE_EVENT}</td><td>${row.WHAT}</td><td>${row.X}</td><td>${row.Y}</td></tr>`;
+      positions.push({idx: row.IDX, who: row.WHO, when: row.WHEN_EVENT, where: row.WHERE_EVENT, what: row.WHAT, x: row.X, y: row.Y, whenSeq: row.WHEN_EVENT_SEQ})
+    });
+    tableHtml += '</tbody></table>';
+      
+    // 렌더링된 HTML을 클라이언트로 보냄
+    res.header("Access-Control-Allow-Origin", "*");
+    res.send({ pd : tableHtml, posi : positions});
+
+  });
+
+  //close the database connection
+  db.close((err) => {
+    if (err) {
+      console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+    } else {
+      console.log('데이터베이스 연결이 종료되었습니다.');
+    }
+  });
+});
+
+//유저포지션받기
+router.post('/insertData', (req, res) => {
+  let { who, when, where, what, p_x, p_y } = req.body;
+
+  let db = new sqlite3.Database('./public/db/userPosition.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+
+  db.run('INSERT INTO sixPrinciples ( WHO, WHEN_EVENT, WHERE_EVENT, WHAT, X, Y) VALUES (?, ?, ?, ?, ? ,?)', [who, when, where, what, p_x, p_y], function(err) {
+    if (err) {
+      console.log('인서트에인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러 에러');
+      return console.error(err.message);
+    }
+    console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
+  });
+
+  db.close((err) => {
+    if (err) {
+      console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+    } else {
+      console.log('데이터베이스 연결이 종료되었습니다.');
+    }
+  });
+  // 여기서는 가짜 응답을 보냄 (실제로는 디비에 데이터를 삽입하는 코드를 추가해야 함)
+  res.json({ success: true, message: 'Data inserted successfully' });
+});
 
 //관리자 페이지
 router.get('/manageGrid', ensureAuthenticated,(req, res) => {

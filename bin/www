@@ -45,10 +45,24 @@ io.on("connection",(socket)=>{
     }
   });
 
-  socket.on("updateGuestList", (List) =>{
+  socket.on("updateGuestListOne", (List) =>{
     userList = List;
+    io.to('asd').emit("updateGuestList", userList);
+  });
+
+  socket.on("updateGuestList", (userP,x,y) =>{
     console.log(guestList);
-    console.log(userList);
+    console.log(userP);
+    for (let i = userList.length - 1; i >= 0; i--){
+      const user = userList[i];
+      if(userP.id === userList[i].id){
+          if(x != 0){
+              user.x = user.x + x;
+          }else{
+              user.y = user.y + y;
+          }
+      }
+    }
     io.to('asd').emit("updateGuestList", userList);
   });
 

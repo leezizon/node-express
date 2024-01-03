@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>로그인</title>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <link rel="icon" href="/images/favicon.ico">
+  <style>
+  /* body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  } */
+
+  .edit {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    /* min-height: 100vh; */
+    /* flex-direction: column; */
+  }
+  .dot {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #4897a6;
+        border-radius: 20%;
+        z-index: 1;
+    }
+
+    canvas {
+      border: 1px solid #000;
+      color: #000;
+    }
+
+    .login-container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        text-align: center;
+    }
+
+    table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 15px; /* 여백을 늘립니다. */
+            text-align: center;
+        }
+
+        th {
+            background-color: #3498db;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        td {
+            font-size: 18px;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <body>
+    <div id="table-container" class="login-container">
+      <!-- 백엔드에서 생성한 표가 여기에 삽입됩니다. -->
+    </div>
+    <div class="edit">
+      <div class="login-container">
+        <div>
+          <label for="whoInput">WHO:</label>
+          <input type="text" id="whoInput">
+        </div>
+        <div>
+            <label for="whenInput">WHEN:</label>
+            <input type="text" id="whenInput">
+        </div>
+        <div>
+            <label for="whereInput">WHERE:</label>
+            <input type="text" id="whereInput">
+        </div>
+        <div>
+            <label for="whatInput">WHAT:</label>
+            <input type="text" id="whatInput">
+        </div>
+        <div>
+          <label for="clickX">좌표X:</label>
+          <input type="text" id="clickX">
+        </div>
+        <div>
+          <label for="clickY">좌표Y:</label>
+          <input type="text" id="clickY">
+        </div>
+        <button onclick="confirmAndSubmit()">Submit</button>
+        <div id="time-control">
+          <input type="range" id="time-slider" min="0" max="10" step="1" value="0">
+        </div>
+      </div>
+      
+      <div id="dot"></div>  
+      <canvas id="myCanvas" width="900" height="600">
+      </canvas>
+    </div>
+</body>
+
+  <script>
+    var edit_tf = false;
+    var posi = []; //포지션들
+    var ex_x = 0;
+    var ex_y = 0;//에딧상태일때 저장할 이전 좌표값
+    var sliderValue; //슬라이더 값
+    var whens = [];//whenseq,sn
+
+    //슬라이더 크기 지정
+    fetch('/whenSeq') // '/query' 엔드포인트를 호출
+    .then(response => response.json())
+    .then(data => {
+      whens = data.whens;
+      const timeControl = document.getElementById("time-slider");
+      timeControl.min = "0";
+      timeControl.max = whens.length;
+    })
+    .catch(error => {
+      console.error('데이터 가져오기 오류:', error);
+    });
+
+    // Function to draw a point on the canvas
+    function drawPoint(x, y, id) {
+      document.getElementById('clickX').value = x;
+      document.getElementById('clickY').value = y;
+      const FCanvas = document.getElementById("myCanvas"); // 요소를 가져오거나 선택합니다.
+      const CanvasRect = FCanvas.getBoundingClientRect();
+      const dotPlace = document.getElementById("dot");
+
+      if(edit_tf){
+        dotPlace.innerHTML = "";
+      };
+
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      dot.id = id;
+      dotPlace.appendChild(dot);
+        
+      dot.style.left = CanvasRect.left + x-5 + "px";
+      dot.style.top = CanvasRect.top + y-5  + "px";
+
+      if(edit_tf){
+        ex_x = x;
+        ex_y = y;
+      };
+    }
+
+    //전체 점찍기
+    function getTableValues() {
+      // 각 점에 드로우
+      for (let i = 0; i < whens.length; i++) {
+        //슬라이더값에 맞는 when순서를 먼저 찾는다
+        if(whens[i].sn==sliderValue){
+          console.log(whens[i].sn);
+          for(let j = 0; j < posi.length; j++){ 
+            if(whens[i].idx==posi[j].whenSeq){
+              drawPoint(Number(posi[j].x), Number(posi[j].y), Number(posi[j].idx));
+            }
+          }
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      var b_img = new Image();
+      b_img.src = 'map.png';
+      const canvas = document.getElementById("myCanvas");
+      const context = canvas.getContext("2d");
+
+      b_img.onload = function () {
+        // Draw the image on the canvas
+        context.drawImage(b_img, 0, 0, canvas.width, canvas.height);
+      };
+      // Event listener for mouse clicks on the canvas
+      canvas.addEventListener("click", function (event) {
+        // Get the coordinates of the click relative to the canvas
+        const x = event.clientX - Math.round(canvas.getBoundingClientRect().left);
+        const y = event.clientY - Math.round(canvas.getBoundingClientRect().top);
+
+        // Draw a point at the clicked coordinates
+        drawPoint(x, y);
+      });
+
+      const timeControl = document.getElementById("time-slider");
+      timeControl.addEventListener("input",()=>{
+        const dotPlace = document.getElementById("dot");
+        dotPlace.innerHTML = "";
+        sliderValue = timeControl.value;
+
+        console.log(sliderValue);
+        fetch('/selectUserPosition',{
+          method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            }
+        }) // '/query' 엔드포인트를 호출
+        .then(response => response.json())
+        .then(data => {
+          posi = data.posi;
+          document.getElementById('table-container').innerHTML = data.pd;
+
+          getTableValues();
+        })
+        .catch(error => {
+          console.error('데이터 가져오기 오류:', error);
+        });
+
+        //drawPoint(Number(posi[i].x), Number(posi[i].y), Number(posi[i].idx));
+        
+      });
+    });
+
+
+    function confirmAndSubmit() {
+      // 사용자에게 확인 메시지를 표시
+      const userConfirmed = confirm("Are you sure you want to submit the data?");
+
+      // 사용자가 확인을 선택한 경우만 submitData() 함수 호출
+      if (userConfirmed) {
+        submitData();
+      } else {
+      // 사용자가 "취소"를 선택한 경우에 대한 처리
+        console.log("User canceled data submission.");
+      }
+    }
+
+    function submitData() {
+      const who = document.getElementById('whoInput').value;
+      const when = document.getElementById('whenInput').value;
+      const where = document.getElementById('whereInput').value;
+      const what = document.getElementById('whatInput').value;
+      const p_x = document.getElementById('clickX').value;
+      const p_y = document.getElementById('clickY').value;
+
+            // 서버로 데이터 전송
+      fetch('/insertData', {
+          method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ who, when, where, what, p_x, p_y })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Data submitted successfully:', data);
+        location.reload();
+      })
+      .catch(error => {
+        console.error('Error submitting data:', error);
+      });
+    }
+
+
+  </script>
+</html>
