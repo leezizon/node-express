@@ -25,6 +25,7 @@ var server = http.createServer(app);
 const io = new Server(server);
 var guestList = [];
 var userList = [];
+var roomList = [];
 var userImgSn = 0;
 
 io.on("connection",(socket)=>{
@@ -36,58 +37,87 @@ io.on("connection",(socket)=>{
   socket.on("room", (roomName) =>{
     // close the database connection
     socket.join(roomName);
-    guestList.push(socket.id);
-    socket.emit("guestList",guestList,socket.id,userList,userImgSn);
+
+    //방은 중복으로 리스트에 넣지 않는다
+    if (!roomList.includes(roomName)) {
+      roomList.push(roomName);
+      guestList.push([]);
+      userList.push([]);
+    }
+    var myRoomIdx = roomList.indexOf(roomName);
+    guestList[myRoomIdx].push(socket.id);
+
+    console.log(roomList);
+    console.log(myRoomIdx);
+
+    socket.emit("guestList",guestList[myRoomIdx],socket.id,userList[myRoomIdx],userImgSn);
     if(userImgSn < 3){
       userImgSn = userImgSn + 1;
     }else{
       userImgSn = 0;
     }
-  });
-
-  socket.on("updateGuestListOne", (List) =>{
-    userList = List;
-    io.to('asd').emit("updateGuestList", userList);
-  });
-
-  socket.on("updateGuestList", (userP,x,y) =>{
-    console.log(guestList);
-    console.log(userP);
-    for (let i = userList.length - 1; i >= 0; i--){
-      const user = userList[i];
-      if(userP.id === userList[i].id){
-          if(x != 0){
-              user.x = user.x + x;
-          }else{
-              user.y = user.y + y;
-          }
-      }
-    }
-    io.to('asd').emit("updateGuestList", userList);
-  });
-
-  socket.on("updateGuest", (List) =>{
-    userList = List;
-    console.log(guestList);
-    console.log(userList);
-    //io.to('asd').emit("updateGuestList", userList);
-  });
 
 
-  socket.on("disconnecting", () =>{
-    if(userList.length == 1){
-      guestList.splice(0,1);
-      userList.splice(0,1);
-      console.log('혼자였는데나감');
-    }else{
-      socket.rooms.forEach((room)=>socket.to(room).emit("bye",socket.id));
-      for (let i = guestList.length - 1; i >= 0; i--){
-        if(guestList[i]===socket.id){
-          guestList.splice(i,1);
-          console.log('나감');
+    socket.on("updateGuestListOne", (List) =>{
+      userList[myRoomIdx] = List;
+      io.to(roomName).emit("updateGuestList", userList[myRoomIdx]);
+    });
+  
+    socket.on("updateGuestList", (userP,x,y) =>{
+      console.log(guestList[myRoomIdx]);
+      console.log(userP);
+      for (let i = userList[myRoomIdx].length - 1; i >= 0; i--){
+        const user = userList[myRoomIdx][i];
+        if(userP.id === userList[myRoomIdx][i].id){
+            if(x != 0){
+                user.x = user.x + x;
+            }else{
+                user.y = user.y + y;
+            }
         }
       }
-    }
+      io.to(roomName).emit("updateGuestList", userList[myRoomIdx]);
+    });
+  
+    socket.on('screenB', (data) => {
+      // 클라이언트로부터 이미지를 수신하면 해당 이미지를 모든 클라이언트에게 전송합니다.
+      io.to(roomName).emit('screenF', data);
+  });
+
+    socket.on("talkB", (sentence, userMeImg) =>{
+      console.log(sentence);
+      io.to(roomName).emit("talkF", sentence,userMeImg);
+    });
+  
+    socket.on("disconnecting", () =>{
+      if(guestList[myRoomIdx].length == 1){
+        console.log(userList[myRoomIdx].length);
+        console.log(userList[myRoomIdx]);
+        console.log(guestList[myRoomIdx]);
+        guestList[myRoomIdx].splice(0,1);
+        userList[myRoomIdx].splice(0,1);
+        console.log('혼자였는데나감');
+        //userList guestList 크기가 같은지 비교
+        if(userList[myRoomIdx].length!=guestList[myRoomIdx].length){
+          console.log('오류가 있는 방입니다, 방을 비웁니다');
+          guestList[myRoomIdx].splice(0);
+          userList[myRoomIdx].splice(0);
+        }
+      }else{
+        socket.rooms.forEach((room)=>socket.to(room).emit("bye",socket.id));
+        for (let i = guestList[myRoomIdx].length - 1; i >= 0; i--){
+          console.log(userList[myRoomIdx].length);
+          console.log(userList[myRoomIdx]);
+          console.log(guestList[myRoomIdx]);
+          if(guestList[myRoomIdx][i]===socket.id){
+            guestList[myRoomIdx].splice(i,1);
+            console.log('나감');
+          }
+        }
+      }
+    });
+
+
   });
 });
 

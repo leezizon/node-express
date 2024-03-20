@@ -18,9 +18,6 @@ router.use(passport.session());
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
-
-// 사용자 데이터베이스 시뮬레이션 (실제로는 데이터베이스를 사용해야 합니다)
-
 // Passport.js 로그인 전략 설정
 passport.use(new LocalStrategy(
   (username, password, done) => {
@@ -59,7 +56,7 @@ passport.deserializeUser((id, done) => {
     }
     console.log('Connected to the chinook database.');
   });
-
+  console.log('.deserializeUser');
   //데이터베이스에서 사용자 확인
   db.get("SELECT * FROM users WHERE id = ?", [id], (err, row) => {
     if (err) {
@@ -112,6 +109,73 @@ router.get('/logout', (req, res) => {
 
 router.get('/', ensureAuthenticated, (req, res) => {
   res.render('shop.html'); // 보호된 페이지 템플릿을 렌더링
+});
+
+
+///////////////////////////////////////////////////////////////////////
+//디비설정//
+//////////////////////////////////////////////////////////////
+// const userPositionDb = new sqlite3.Database('./public/db/userPosition.db', (err) => {
+//   if (err) {
+//       console.error(err.message);
+//   }
+//   console.log('Connected to the chinook database.');
+// });
+
+
+
+//상품
+router.get('/leePd2', function(req, res, next) {
+  
+  const param1 = req.query.param1;
+
+  let dbIndex = 0;
+  let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+  
+  db.all('SELECT * FROM product LIMIT 6 OFFSET ?',[param1], (err, rows) => {
+    if (err) {
+      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
+    }
+
+    // HTML 표 생성
+    let tableHtml = '';
+    
+    tableHtml += `<div class="horizontal-line"></div>`
+
+    rows.forEach((row) => {
+      dbIndex += 1;
+      tableHtml += 
+      `<section class="product" id="Pd${row.PdId}">
+      <div class="product-detail">${row.PdNm}<img src="shopitem/${row.PdId}.png" alt="상품 이미지"></div>     
+      <div class = "custom-buttons">
+      <button id="getPdEx${row.PdId}"  class="custom-button2"><input type="hidden" class="hiddenField" value="${row.PdEx}">설명</button>
+      <button id="getPd${row.PdId}"  class="custom-button"><input type="hidden" class="hiddenField" value="${row.PdPrice}원">담기</button>
+      </div>
+      </section>`
+      if(dbIndex == 3){
+        tableHtml += `<div class="horizontal-line"></div>`
+      } 
+    });
+
+    tableHtml += `<div class="horizontal-line"></div>`
+
+    // 렌더링된 HTML을 클라이언트로 보냄
+    res.send(tableHtml);
+
+    //close the database connection
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+      } else {
+        console.log('데이터베이스 연결이 종료되었습니다.');
+      }
+    });
+  });
 });
 
 
@@ -178,7 +242,7 @@ router.post('/test', function(req, res) {
     }
     console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
   });    
-  res.header("Access-Control-Allow-Origin", "*");
+  //res.header("Access-Control-Allow-Origin", "*");
   res.json('T');
 
   db.close((err) => {
@@ -192,7 +256,22 @@ router.post('/test', function(req, res) {
 
 //상품구매
 router.post('/save', function(req, res) {
-  const b_product_id = req.body.PdId;
+
+
+  
+  if (req.isAuthenticated() == false) {
+    console.log('로그인해주세요');
+    res.json('F');
+    return;
+  }
+  var b_product_id = req.body.PdId;
+
+  if (Array.isArray(b_product_id)) {
+    console.log('이 변수는 배열입니다.');
+  } else {
+    b_product_id = [b_product_id];
+  }
+
   var user_money = 100000;
   var b_product_cost = 100000; 
   var b_product_cnt = 100000; 
@@ -205,50 +284,163 @@ router.post('/save', function(req, res) {
     console.log('Connected to the chinook database.');
   });
 
-  db.all('SELECT * FROM user_M WHERE  id = ?' ,[req.user.id], (err, rows) => {
-    rows.forEach((row) => {
-      user_money = row.Money;
-      db.all('SELECT * FROM product WHERE  PdId = ?' ,[b_product_id], (err, rows) => {
-        rows.forEach((row) => {
+  async function processProducts(req, res) {
+    try {
+      const userRows = await getUserData(req.user.id);
+
+      //업데이트할 변수들(유저 자산, 재고상황)
+      let updatedUserMoney = userRows[0].Money;
+      let updatedProductCnt;
+
+      for (let i = 0; i < b_product_id.length; i++) {
+        const productRows = await getProductData(parseInt(b_product_id[i].pdId));
+
+        if (productRows.length > 0) {
+          const row = productRows[0];
           b_product_cost = row.PdPrice;
           b_product_cnt = row.PdCnt;
           b_product_nm = row.PdNm;
-          //물건값보다 돈이 없으면 실패
-          if (-1 < user_money - b_product_cost){
-            PD_U_A_D(req.user.id, b_product_id,b_product_cnt-1,b_product_nm, user_money - b_product_cost, req.user.name);
-            res.json('T');
-          }else{
+
+          if (userRows.length > 0 && userRows[0].Money >= b_product_cost) {
+            updatedProductCnt = b_product_cnt - parseInt(b_product_id[i].count);
+            updatedUserMoney = updatedUserMoney - b_product_cost*parseInt(b_product_id[i].count);
+            const updatedUserName = req.user.name;
+
+            await PD_U_A_D(req.user.id, parseInt(b_product_id[i].pdId), updatedProductCnt, b_product_nm, updatedUserMoney, updatedUserName, parseInt(b_product_id[i].count));
+          } else {
+            res.json('N');
+            return;
           }
-        })
-      });
-    })
-  });
+        }
+      }
 
-  //db 업데이트 인서트
-  function PD_U_A_D(id, b_pd_id,b_pd_cnt,b_pd_nm, f_m,user_name) {
-  db.run('UPDATE product SET PdCnt = ? WHERE PdId = ?', [b_pd_cnt, b_pd_id], function(err) {
-    if (err) {
-      return console.error(err.message);
+      res.json('T');
+      await shutDb();
+    } catch (error) {
+      console.error(error);
+      res.status(500).json('Internal Server Error');
     }
-    console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
-  });
-
-  db.run('UPDATE user_M SET Money = ? WHERE id = ?', [f_m,id], function(err) {
-    if (err) {
-      return console.error(err.message);
-    }
-    console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
-  });
-
-  db.run('INSERT INTO assets (assetsWithUserId, PdNm, PdId, useSn,name) VALUES (?, ?, ?, ?, ?)', [id,b_pd_nm,b_pd_id,'Y',user_name], function(err) {
-    if (err) {
-      return console.error(err.message);
-      console.log('인서트에인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러 에러');
-    }
-    console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
-  });        
   }
-  
+
+
+  // 유저 정보 조회
+  function getUserData(userId) {
+    return new Promise((resolve, reject) => {
+      db.all('SELECT * FROM user_M WHERE id = ?', [userId], (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+    });
+  }
+
+  // 상품 정보 조회
+  function getProductData(productId) {
+    return new Promise((resolve, reject) => {
+      db.all('SELECT * FROM product WHERE PdId = ?', [productId], (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+    });
+  }
+
+  // db 업데이트 인서트
+  async function PD_U_A_D(id, b_pd_id, b_pd_cnt, b_pd_nm, f_m, user_name, toBuyProductCount) {
+    await updateProduct(id, b_pd_id, b_pd_cnt);
+    await updateUserMoney(id, f_m, toBuyProductCount);
+    await insertAssets(id, b_pd_nm, b_pd_id, 'Y', user_name, toBuyProductCount);
+  }
+
+  // 상품 정보 업데이트
+  function updateProduct(id, b_pd_id, b_pd_cnt) {
+    return new Promise((resolve, reject) => {
+      db.run('UPDATE product SET PdCnt = ? WHERE PdId = ?', [b_pd_cnt, b_pd_id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          console.log(`Product Updated: ${this.changes} records changed.`);
+          resolve();
+        }
+      });
+    });
+  }
+
+  // 유저 돈 업데이트
+  function updateUserMoney(id, f_m) {
+    return new Promise((resolve, reject) => {
+      db.run('UPDATE user_M SET Money = ? WHERE id = ?', [f_m, id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          console.log(`User Money Updated: ${this.changes} records changed.`);
+          resolve();
+        }
+      });
+    });
+  }
+
+  // 자산 정보 삽입
+  function insertAssets(id, b_pd_nm, b_pd_id, useSn, user_name, toBuyProductCount) {
+    return new Promise((resolve, reject) => {
+      //물건갯수에 맞게 포문돌기
+      for(let i =0; i < toBuyProductCount; i++){
+        db.run('INSERT INTO assets (assetsWithUserId, PdNm, PdId, useSn, name) VALUES (?, ?, ?, ?, ?)', [id, b_pd_nm, b_pd_id, useSn, user_name], function (err) {
+          if (err) {
+            console.error(err.message);
+            reject(err);
+          } else {
+            console.log(`Asset Inserted: ${this.changes} records changed.`);
+            resolve();
+          }
+        });
+      }
+    });
+  }
+
+  //db끄기
+  function shutDb(){
+    return new Promise((resolve, reject) => {
+      db.close((err) => {
+        if (err) {
+          console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+        } else {
+          console.log('데이터베이스 연결이 종료되었습니다.');
+        }
+      });
+    });
+  }
+
+  processProducts(req, res);
+
+})
+
+//이름, 자산정보만 빼오기
+router.get('/inShopMyMoney', (req, res) => {
+  console.log('내상품정보2');
+
+  if (req.isAuthenticated() == false) {
+    console.log('로그인해주세요');
+    return;
+  }
+
+  let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+  console.log(req.user.id);
+  db.all('SELECT * FROM user_M WHERE id = ?' ,[req.user.id], (err, rows) => {
+
+    console.log(rows[0].Money);
+    res.send({name:req.user.name, money:rows[0].Money});
+
+  })
 
   db.close((err) => {
     if (err) {
@@ -257,7 +449,6 @@ router.post('/save', function(req, res) {
       console.log('데이터베이스 연결이 종료되었습니다.');
     }
   });
-
 })
 
 
@@ -395,7 +586,7 @@ router.get('/whenSeq', function(req, res, next) {
       whens.push({sn: whenSn, idx : row.idx, when: row.whenV});
     });
     // 렌더링된 HTML을 클라이언트로 보냄
-    res.header("Access-Control-Allow-Origin", "*");
+    //res.header("Access-Control-Allow-Origin", "*");
     res.send({ whens : whens});
   });
 
@@ -409,26 +600,20 @@ router.get('/whenSeq', function(req, res, next) {
   });
 });
 
-router.post('/selectUserPosition', function(req, res, next) {
-  let cnt;
+router.post('/selectUserPosition', async (req, res) => {
   let tableHtml;
+  let selectHtml_who;
+  let selectHtml_where;
+  let selectHtml_when;
   let positions = [];
 
 
-  let query = `SELECT IDX,WHO,WHEN_EVENT,WHERE_EVENT,WHAT,X,Y,WHEN_EVENT_SEQ FROM sixPrinciples`;
+  let query = `SELECT IDX,WHO,WHEN_EVENT,WHERE_EVENT,WHAT,X,Y,WHEN_EVENT_SEQ,WHO_EVENT_SEQ FROM sixPrinciples`;
+  let query_who = `SELECT * FROM sixOfWho`;
+  let query_where = `SELECT * FROM sixOfWhere`;
+  let query_when = `SELECT * FROM sixOfWhen`;
 
-  //타임슬라이더 조건
-  // if (condition !== '') {
-  //   query += ` WHERE WHEN_EVENT_SEQ = ?`;
-  // }
-
-  //위 타임슬라이더 조건에 맞을시
-  // 쿼리 실행
-  // const parameters = [];
-  // if (condition !== '') {
-  //   parameters.push(condition);
-  // }
-
+  
   const db = new sqlite3.Database('./public/db/userPosition.db', (err) => {
     if (err) {
         console.error(err.message);
@@ -436,23 +621,129 @@ router.post('/selectUserPosition', function(req, res, next) {
     console.log('Connected to the chinook database.');
   });
   
-  db.all(query , (err, rows) => {
-    if (err) {
-      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
-    }
-    // HTML 표 생성
-    tableHtml = '<table id ="myTable"> <tbody><tr><th>N</th><th>WHO</th><th>WHEN</th><th>WHERE</th><th>WHAT</th><th>X</th><th>Y</th></tr>';
-    rows.forEach((row) => {
-      tableHtml += `<tr><td>${row.IDX}</td><td>${row.WHO}</td><td>${row.WHEN_EVENT}</td><td>${row.WHERE_EVENT}</td><td>${row.WHAT}</td><td>${row.X}</td><td>${row.Y}</td></tr>`;
-      positions.push({idx: row.IDX, who: row.WHO, when: row.WHEN_EVENT, where: row.WHERE_EVENT, what: row.WHAT, x: row.X, y: row.Y, whenSeq: row.WHEN_EVENT_SEQ})
-    });
-    tableHtml += '</tbody></table>';
-      
-    // 렌더링된 HTML을 클라이언트로 보냄
-    res.header("Access-Control-Allow-Origin", "*");
-    res.send({ pd : tableHtml, posi : positions});
+  // db.all(query , (err, rows) => {
+  //   if (err) {
+  //     return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
+  //   }
+  //   // HTML 표 생성
+  //   tableHtml = '<table id ="myTable"> <tbody><tr><th>N</th><th>WHO</th><th>WHEN</th><th>WHERE</th><th>WHAT</th><th>X</th><th>Y</th></tr>';
+  //   rows.forEach((row) => {
+  //     tableHtml += `<tr><td>${row.IDX}</td><td>${row.WHO}</td><td>${row.WHEN_EVENT}</td><td>${row.WHERE_EVENT}</td><td>${row.WHAT}</td><td>${row.X}</td><td>${row.Y}</td></tr>`;
+  //     positions.push({idx: row.IDX, who: row.WHO, when: row.WHEN_EVENT, where: row.WHERE_EVENT, what: row.WHAT, x: row.X, y: row.Y, whenSeq: row.WHEN_EVENT_SEQ, whoSeq: row.WHO_EVENT_SEQ})
+  //     console.log(row.WHO_EVENT_SEQ);
+  //   });
+  //   tableHtml += '</tbody></table>';
+    
+    
 
+    // 렌더링된 HTML을 클라이언트로 보냄
+    //res.header("Access-Control-Allow-Origin", "*");
+    //res.send({ pd : tableHtml, posi : positions});
+
+  //});
+  
+
+
+
+  // 여러 개의 쿼리를 비동기적으로 실행
+  const queryAlls = await queryAll();  // 첫 번째 쿼리
+  const queryWhos = await queryWho();  // 두 번째 쿼리
+  const queryWheres = await queryWhere();  // 두 번째 쿼리
+  const queryWhens = await queryWhen();  // 두 번째 쿼리
+  
+
+  // select옵션생성
+  selectHtml_who = '<select>';
+  queryWhos.forEach((row) => {
+    selectHtml_who += `<option value="${row.idx}">${row.whoV}</option>`;
+    console.log(row.whoV);
   });
+  selectHtml_who += '</select>';
+
+   selectHtml_when = '<select>';
+  queryWhens.forEach((row) => {
+    selectHtml_when += `<option value="${row.idx}">${row.whenV}</option>`;
+    console.log(row.whenV);
+  });
+  selectHtml_when += '</select>';
+
+   selectHtml_where = '<select>';
+  queryWheres.forEach((row) => {
+    selectHtml_where += `<option value="${row.idx}">${row.whereV}</option>`;
+    console.log(row.whereV);
+  });
+  selectHtml_where += '</select>';
+
+   // HTML 표 생성
+  tableHtml = '<table id ="myTable"> <tbody><tr><th>N</th><th>WHO</th><th>WHEN</th><th>WHERE</th><th>WHAT</th><th>X</th><th>Y</th></tr>';
+  queryAlls.forEach((row) => {
+    tableHtml += `<tr><td>${row.IDX}</td><td>${row.WHO}</td><td>${row.WHEN_EVENT}</td><td>${row.WHERE_EVENT}</td><td>${row.WHAT}</td><td>${row.X}</td><td>${row.Y}</td></tr>`;
+    //캐릭터 색 배치를 위해 쿼리 끼우기(row2.whoC를 추가하기위함)
+    queryWhos.forEach((row2) => {
+      //겹포문으로 수가 늘어나지않도록 같은 idx를 가진 row만 push
+      if(row2.idx==row.WHO_EVENT_SEQ){
+        positions.push({idx: row.IDX, who: row.WHO, when: row.WHEN_EVENT, where: row.WHERE_EVENT, what: row.WHAT, x: row.X, y: row.Y, whenSeq: row.WHEN_EVENT_SEQ, whoSeq: row.WHO_EVENT_SEQ, whoColor: row2.whoC });
+        console.log(row2.whoC );
+        console.log(row.WHO_EVENT_SEQ);
+      }
+    });
+  });
+  tableHtml += '</tbody></table>';
+    
+    
+
+    // 렌더링된 HTML을 클라이언트로 보냄
+    //res.header("Access-Control-Allow-Origin", "*");
+  res.send({sh_who : selectHtml_who, sh_where : selectHtml_where, sh_when : selectHtml_when , pd : tableHtml, posi : positions});
+    // 첫 번째 쿼리를 실행하는 함수
+
+    function queryWho() {
+      return new Promise((resolve, reject) => {
+        db.all(query_who, (err, rows) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        });
+      });
+    }
+
+    function queryWhen() {
+      return new Promise((resolve, reject) => {
+        db.all(query_when, (err, rows) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        });
+      });
+    }
+
+    function queryWhere() {
+      return new Promise((resolve, reject) => {
+        db.all(query_where, (err, rows) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        });
+      });
+    }
+
+    function queryAll() {
+      return new Promise((resolve, reject) => {
+        db.all(query, (err, rows) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        });
+      });
+    }
 
   //close the database connection
   db.close((err) => {
@@ -618,6 +909,11 @@ router.post('/selectManageMoneyGrid', function(req, res, next) {
 //로비 페이지
 router.get('/loby', function(req, res, next) {
   res.render('loby.html'); 
+});
+
+//상점프론트 예시
+router.get('/front_ex', function(req, res, next) {
+  res.render('front.html'); 
 });
 
 module.exports = router;

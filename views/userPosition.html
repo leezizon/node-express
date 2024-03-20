@@ -5,16 +5,25 @@
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <link rel="icon" href="/images/favicon.ico">
   <style>
-  /* body {
-    font-family: Arial, sans-serif;
-    background-color: #f2f2f2;
+    .container {
+    display: flex;
+    background-color:#FFA07A;
+    /* background-image: url(back.png); */
+    justify-content: center;
+    /* align-items: center; */
+    margin: 0 auto;
+    overflow: hidden;
+    }
+  body {
+    /* font-family: Arial, sans-serif;
+    background-color: #f2f2f2; */
     margin: 0;
-    padding: 0;
+    /* padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-  } */
+    min-height: 100vh; */
+  }
 
   .edit {
     font-family: Arial, sans-serif;
@@ -28,7 +37,7 @@
         position: absolute;
         width: 10px;
         height: 10px;
-        background-color: #4897a6;
+        /* background-color: #4897a6; */
         border-radius: 20%;
         z-index: 1;
     }
@@ -76,10 +85,13 @@
             font-weight: bold;
         }
 
-        input {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
+        input, select {
+          width: 100%;
+          padding: 8px;
+          box-sizing: border-box;
+          font-size: 16px; /* 원하는 폰트 크기로 설정 */
+          border: 1px solid #ccc; /* 원하는 테두리 스타일 및 색상으로 설정 */
+          border-radius: 4px; /* 원하는 테두리 반경으로 설정 */
         }
 
         button {
@@ -98,52 +110,63 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 </head>
 <body>
-
-  <body>
-    <div id="table-container" class="login-container">
-      <!-- 백엔드에서 생성한 표가 여기에 삽입됩니다. -->
-    </div>
-    <div class="edit">
-      <div class="login-container">
-        <div>
-          <label for="whoInput">WHO:</label>
-          <input type="text" id="whoInput">
+    <div class="container">'
+      <div>
+        <div id="table-container" class="login-container">
+          <!-- 백엔드에서 생성한 표가 여기에 삽입됩니다. -->
         </div>
-        <div>
-            <label for="whenInput">WHEN:</label>
-            <input type="text" id="whenInput">
+      <div class="edit">
+        <div class="login-container">
+          <div>
+            <label for="whoInput">WHO:</label>
+            <input type="text" id="whoInput">
+          </div>
+          <div id ="who-edit-container">
+            <select><option value="asdasd">asdasd</option></select>
+          </div>
+          <div>
+              <label for="whenInput">WHEN:</label>
+              <input type="text" id="whenInput">
+          </div>
+          <div id ="when-edit-container">
+            <select><option value="asdasd">asdasd</option></select>
+          </div>
+          <div>
+              <label for="whereInput">WHERE:</label>
+              <input type="text" id="whereInput">
+          </div>
+          <div id ="where-edit-container">
+            <select><option value="asdasd">asdasd</option></select>
+          </div>
+          <div>
+              <label for="whatInput">WHAT:</label>
+              <input type="text" id="whatInput">
+          </div>
+          <div>
+            <label for="clickX">좌표X:</label>
+            <input type="text" id="clickX">
+          </div>
+          <div>
+            <label for="clickY">좌표Y:</label>
+            <input type="text" id="clickY">
+          </div>
+          <button onclick="confirmAndSubmit()">Submit</button>
+          <button onclick="Edit()">Edit</button>
         </div>
-        <div>
-            <label for="whereInput">WHERE:</label>
-            <input type="text" id="whereInput">
-        </div>
-        <div>
-            <label for="whatInput">WHAT:</label>
-            <input type="text" id="whatInput">
-        </div>
-        <div>
-          <label for="clickX">좌표X:</label>
-          <input type="text" id="clickX">
-        </div>
-        <div>
-          <label for="clickY">좌표Y:</label>
-          <input type="text" id="clickY">
-        </div>
-        <button onclick="confirmAndSubmit()">Submit</button>
-        <div id="time-control">
-          <input type="range" id="time-slider" min="0" max="10" step="1" value="0">
-        </div>
+        <div id="dot"></div>  
+        <canvas id="myCanvas" width="900" height="600">
+        </canvas>
       </div>
-      
-      <div id="dot"></div>  
-      <canvas id="myCanvas" width="900" height="600">
-      </canvas>
+      <div id="time-control">
+        <input type="range" id="time-slider" min="0" max="10" step="1" value="0">
+      </div>
+      </div>
     </div>
 </body>
 
   <script>
     var edit_tf = false;
-    var posi = []; //포지션들
+    var posi = []; //모든포지션들
     var ex_x = 0;
     var ex_y = 0;//에딧상태일때 저장할 이전 좌표값
     var sliderValue; //슬라이더 값
@@ -163,7 +186,7 @@
     });
 
     // Function to draw a point on the canvas
-    function drawPoint(x, y, id) {
+    function drawPoint(x, y, id, whoSeq, whoColor) {
       document.getElementById('clickX').value = x;
       document.getElementById('clickY').value = y;
       const FCanvas = document.getElementById("myCanvas"); // 요소를 가져오거나 선택합니다.
@@ -176,6 +199,10 @@
 
       const dot = document.createElement('div');
       dot.classList.add('dot');
+      //whoSeq에 다른 색
+      //console.log(whoSeq);
+      dot.style.backgroundColor = whoColor;
+      
       dot.id = id;
       dotPlace.appendChild(dot);
         
@@ -194,16 +221,19 @@
       for (let i = 0; i < whens.length; i++) {
         //슬라이더값에 맞는 when순서를 먼저 찾는다
         if(whens[i].sn==sliderValue){
-          console.log(whens[i].sn);
+          //console.log(whens[i].sn);
           for(let j = 0; j < posi.length; j++){ 
             if(whens[i].idx==posi[j].whenSeq){
-              drawPoint(Number(posi[j].x), Number(posi[j].y), Number(posi[j].idx));
+              drawPoint(Number(posi[j].x), Number(posi[j].y), Number(posi[j].idx), Number(posi[j].whoSeq), posi[j].whoColor);
+              console.log(posi[j].whoColor);
+              //console.log(posi[j].whoSeq);
             }
           }
         }
       }
     }
 
+    //화면 로드
     document.addEventListener("DOMContentLoaded", function () {
       var b_img = new Image();
       b_img.src = 'map.png';
@@ -213,24 +243,8 @@
       b_img.onload = function () {
         // Draw the image on the canvas
         context.drawImage(b_img, 0, 0, canvas.width, canvas.height);
-      };
-      // Event listener for mouse clicks on the canvas
-      canvas.addEventListener("click", function (event) {
-        // Get the coordinates of the click relative to the canvas
-        const x = event.clientX - Math.round(canvas.getBoundingClientRect().left);
-        const y = event.clientY - Math.round(canvas.getBoundingClientRect().top);
 
-        // Draw a point at the clicked coordinates
-        drawPoint(x, y);
-      });
-
-      const timeControl = document.getElementById("time-slider");
-      timeControl.addEventListener("input",()=>{
-        const dotPlace = document.getElementById("dot");
-        dotPlace.innerHTML = "";
-        sliderValue = timeControl.value;
-
-        console.log(sliderValue);
+        //이미지 로드 되자마자 데이터 가지고오기
         fetch('/selectUserPosition',{
           method: 'POST',
             headers: {
@@ -241,18 +255,83 @@
         .then(data => {
           posi = data.posi;
           document.getElementById('table-container').innerHTML = data.pd;
+          document.getElementById('who-edit-container').innerHTML = data.sh_who;
+          document.getElementById('where-edit-container').innerHTML = data.sh_where;
+          document.getElementById('when-edit-container').innerHTML = data.sh_when;
 
           getTableValues();
         })
         .catch(error => {
           console.error('데이터 가져오기 오류:', error);
         });
+      };
+      // Event listener for mouse clicks on the canvas
+      canvas.addEventListener("click", function (event) {
+        if(edit_tf){
+          // Get the coordinates of the click relative to the canvas
+          const x = event.clientX - Math.round(canvas.getBoundingClientRect().left);
+          const y = event.clientY - Math.round(canvas.getBoundingClientRect().top);
 
-        //drawPoint(Number(posi[i].x), Number(posi[i].y), Number(posi[i].idx));
+          // Draw a point at the clicked coordinates
+          drawPoint(x, y, 0, 0,'#4caf50');
+        }
+      });
+
+      // JavaScript 코드
+      document.getElementById('dot').addEventListener('click', function(event) {
+        // 클릭된 요소 확인
+        var clickedElement = event.target;
+
+        // 클릭된 요소가 div인지 확인
+        if (clickedElement.tagName === 'DIV') {
+            // 클릭된 div에 대한 작업 수행
+            console.log('Clicked on', clickedElement.id);
+        }
+      });
+
+      const timeControl = document.getElementById("time-slider");
+      timeControl.addEventListener("input",()=>{
+        const dotPlace = document.getElementById("dot");
+        dotPlace.innerHTML = "";
+        sliderValue = timeControl.value;
+
+        console.log(sliderValue);
+        getTableValues();
         
       });
     });
 
+    //에딧모드
+    function Edit(){
+
+      var whoInput = document.getElementById("whoInput");
+      var whenInput = document.getElementById("whenInput");
+      var whereInput = document.getElementById("whereInput");
+      var whatInput = document.getElementById("whatInput");
+      var clickX = document.getElementById("clickX");
+      var clickY = document.getElementById("clickY");
+
+      var isDisabled = whoInput.disabled;// 현재 상태 확인
+
+      whoInput.disabled = !isDisabled;// 상태 반전
+      whenInput.disabled = !isDisabled;// 상태 반전
+      whereInput.disabled = !isDisabled;// 상태 반전
+      whatInput.disabled = !isDisabled;// 상태 반전
+      clickX.disabled = !isDisabled;// 상태 반전
+      clickY.disabled = !isDisabled;// 상태 반전
+      
+      if(whoInput.disabled){
+        console.log(whoInput.disabled);
+        edit_tf = true;
+      }
+
+      whoInput.value = '';// 값지우기
+      whenInput.value = '';// 값지우기
+      whereInput.value = '';// 값지우기
+      whatInput.value = '';// 값지우기
+      clickX.value = '';// 값지우기
+      clickY.value = '';// 값지우기
+    }
 
     function confirmAndSubmit() {
       // 사용자에게 확인 메시지를 표시
