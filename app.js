@@ -8,6 +8,9 @@ const nunjucks = require('nunjucks');
 const cors = require('cors');
 
 var indexRouter = require('./routes/index');
+var lobyRouter = require('./routes/loby');
+var liveRouter = require('./routes/live');
+var userRouter = require('./routes/user');
 // var usersRouter = require('./routes/users');
 
 var app = express();
@@ -22,6 +25,9 @@ app.use(cors(corsOptions));
 
 //라우더설정
 app.use('/', indexRouter);
+app.use('/e', lobyRouter);
+app.use('/l', liveRouter);
+app.use('/u', userRouter);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'njk');
@@ -36,7 +42,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+//app.use('/', indexRouter);
 // app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler

@@ -2,248 +2,332 @@
     <head>
         <meta charset="UTF-8">
         <style>
+            /* 공통클레스 */
+            .display-flex {
+                display: flex;
+            }
+
+              /* 팝업클레스 */
+            .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+            }
+
+            .popup {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 5px;
+                border: 4px solid rgba(0, 0, 0); /* 겉 테두리 스타일 및 색상 설정 */
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+                text-align: center;
+            }
+
+            .selectProfile {
+                width: 50px;
+                height: 50px;
+                margin: 5px;
+                background-color: #fff;
+                border: 4px solid rgba(0, 0, 0); /* 겉 테두리 스타일 및 색상 설정 */
+                display: flex;
+                align-items: center;
+                font-size: 20px;
+                transition: background-color 0.3s ease; /* 호버 효과에 대한 전환 효과 */
+                border-radius: 10px; /* 박스를 둥글게 만듭니다. */
+                padding: 5px; /* 내부 여백을 추가합니다. */
+            }
+
+            .selectProfile:hover {
+            background-color: #FFC300;/* 호버 상태에서의 배경색 변경 */
+            cursor: pointer; /* 호버 상태에서 커서 모양 변경 */
+            }
+
+            .boxContainer {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2x3 그리드 생성 */
+            grid-gap: 10px; /* 박스 간의 간격 설정 */
+            justify-items: center; /* 가로 중앙 정렬 */
+            align-items: center; /* 세로 중앙 정렬 */
+            width: 800px; /* 가로 크기 설정 */
+            margin: 0 auto; /* 화면 가운데 정렬 */
+            background-color: #000;
+            }
+
+            .box {
+                width: 350px;
+                height: 56px;
+                border: 4px solid rgba(0, 0, 0); /* 겉 테두리 스타일 및 색상 설정 */
+                background-color: #fff;
+                display: flex;
+                align-items: center;
+                font-size: 20px;
+                transition: background-color 0.3s ease; /* 호버 효과에 대한 전환 효과 */
+                border-radius: 10px; /* 박스를 둥글게 만듭니다. */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 효과를 추가합니다. */
+                padding: 15px; /* 내부 여백을 추가합니다. */
+            }
+
+            .box img {
+                width: 50px;
+                height: 50px;
+                max-width: 100%; /* 이미지가 박스를 넘어가지 않도록 최대 너비를 설정합니다. */
+                display: block; /* 이미지를 블록 요소로 만들어 세로로 중앙 정렬합니다. */
+            }
+
+            .box .talk {
+                width: 200px;
+                overflow: hidden;
+                background-color: #F0FFF0;
+                font-size: 18px; /* 대화 텍스트의 폰트 크기를 줄입니다. */
+                color: #333; /* 대화 텍스트의 색상을 변경합니다. */
+                margin-top: 5px; /* 대화 텍스트 위 여백을 추가합니다. */
+            }
+
+
+
+            .manage_box {
+                width: 350px;
+                height: 56px;
+                background-color: #FF5733;
+                display: flex;
+                align-items: center;
+                font-size: 20px;
+                transition: background-color 0.3s ease; /* 호버 효과에 대한 전환 효과 */
+                border-radius: 10px; /* 박스를 둥글게 만듭니다. */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 효과를 추가합니다. */
+                padding: 15px; /* 내부 여백을 추가합니다. */
+            }
+
+            .manage_box:hover {
+            background-color: #FFC300;/* 호버 상태에서의 배경색 변경 */
+            cursor: pointer; /* 호버 상태에서 커서 모양 변경 */
+            }
+
+            .manageBox {
+            position: absolute;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2x3 그리드 생성 */
+            grid-gap: 10px; /* 박스 간의 간격 설정 */
+            justify-items: center; /* 가로 중앙 정렬 */
+            align-items: center; /* 세로 중앙 정렬 */
+            width: 800px; /* 가로 크기 설정 */
+            margin: 0 auto; /* 화면 가운데 정렬 */
+            z-index: 1;
+            background-color: #FF5733;
+            opacity: 30%;
+            }
+
+            /* 초기에는 input 요소를 감춥니다. */
+            #editableInput {
+                display: none;
+            }
+            
+            #profileImgState {
+                position: absolute;
+                z-index: 1;
+            }
+
+            #fileInput {
+                display: none; /* 파일 선택 버튼 숨기기 */
+            }
+
+            .container{
+            margin: auto;
+            display: flex;
+            justify-content: center;    
+            }
+
             .hidden-canvas {
-            display: none;
+                display: none;
+            }
+
+            .centered-div {
+            width: 800px;
+            height: 600px;
+            background-color:#FF5733;
+            text-align: center;
+            align-items: center;
+            /* line-height: 931px; */
+            }
+
+            .custom-button{
+                padding-top: 50px;
+            }
+
+            .screen {
+            position: absolute;
+            width: 800px;
+            height: 600px;
+            z-index: 1;
+            }
+
+            .chatLog {
+            margin: 10px;
+            border: 4px solid #000;
+            background: #fff;
+            position: absolute;
+            width: 772px;
+            height: 580px;
+            z-index: 2;
+            overflow: scroll;
+            }
+
+            .chatLog div {
+            padding: 10px;
+            }
+
+
+            .input-container {
+                display: flex;
+                align-items: center;
+                background: #fff;
+                border: 1px solid #ccc;
+                border-radius: 20px; /* 입력창 둥글게 만들기 */
+                padding: 10px;
+            }
+
+            .input-container input {
+                border: none;
+                outline: none;
+                flex: 1;
+                padding: 5px;
+                border-radius: 20px; /* 입력창 둥글게 만들기 */
+                margin-right: 10px;
+            }
+
+            .input-container div {
+                border: none;
+                background-color: #000;
+                color: #fff;
+                padding: 10px 20px;
+                border-radius: 20px; /* 버튼 둥글게 만들기 */
+                cursor: pointer;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            
+            .sideBoxContainer{
+                display: flex;
+                background: #000;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .sideBoxContainer-right{
+                display: flex;
+                background: #000;
+                flex-direction: column;
+                justify-content: flex-end;
+                align-items: flex-end
+            }
+
+            .sideButton{
+                width:  60px;
+                height: 60px;
+                margin-left: 10px;
+                margin-bottom: 10px;
+                color:  #fff;
+                padding: 5px;
+                border: 4px solid #fff; /* 겉 테두리 스타일 및 색상 설정 */
+                border-radius: 10px; /* 박스를 둥글게 만듭니다. */
+            }
+
+            .sideButton-right{
+                width:  60px;
+                height: 60px;
+                margin-right: 10px;
+                margin-bottom: 10px;
+                color:  #fff;
+                padding: 5px;
+                border: 4px solid #fff; /* 겉 테두리 스타일 및 색상 설정 */
+                border-radius: 10px; /* 박스를 둥글게 만듭니다. */
             }
         </style>
+        <script type="module" src="script/game.js" defer></script>
+        <script type="module" src="script/rcp.js" defer></script>
+        <script type="module" src="script/logFileLoad.js" defer></script>
+        <script src="/socket.io/socket.io.js" ></script> 
     </head>
     <body>
-        <input type="file" id="fileInput">
-        <div id = "buttons" class="buttons">
-            <div id="asd" class="custom-button">
-                asd
+        <div class="container">
+            <div class="popup-overlay" id = "e-mail_input" style="display: none;">
+                <div class="popup">
+                    <h2>프로필 사진 선택</h2>
+                    <div class="display-flex">
+                        <div class="selectProfile" id="b"><img src="b.png"></div>
+                        <div class="selectProfile" id="in"><img src="in.png"></div>
+                        <div class="selectProfile" id="w"><img src="w.png"></div>
+                    </div>
+                </div>
             </div>
-            <div id="rew" class="custom-button">
-                rew
+            <div class = "sideBoxContainer" style="background: #000;">
+                <div>
+                    <div style="width: 300px; height: 100px;"></div>
+                    <div style="width: 300px; height: 100px;"></div>
+                    <div style="width: 300px; height: 100px;"></div>
+                    <div style="width: 300px; height: 100px;"></div>
+                </div>
+                <div class="display-flex">
+                    <div id="meButton" class="sideButton">나임을 확인</div>
+                    <div id="manageButton" class="sideButton" style="color: #fff;">관리자권한변경</div>
+                </div> 
             </div>
-            <div id="zxc" class="custom-button">
-                zxc
+            <div>
+                <div style="background: #000; height: 100px;"></div>
+                <div class="centered-div">
+                    <div id = "buttons" class="buttons">
+                        <div id="asd" class="custom-button">
+                            <img src="room1.png">
+                        </div>
+                        <div id="rew" class="custom-button">
+                            <img src="room2.png">
+                        </div>
+                        <div id="zxc" class="custom-button">
+                            <img src="room3.png">
+                        </div>
+                    </div>
+                    <div class="screen"><canvas id="myCanvas" class="hidden-canvas" width="800" height="600"></canvas></div>
+                    <div class="screen"><canvas id="screen" class="hidden-canvas" width="800" height="600"></canvas></div>
+                    <div class="screen"><canvas id="battleScreen" class="hidden-canvas" width="800" height="600"></canvas></div>
+                    <div class="screen"><canvas id="buttonScreen" class="hidden-canvas" width="800" height="600"></canvas></div>
+                    <div class="hidden-canvas" id="chatLog">
+                        <div class="chatLog">
+                        </div>
+                    </div>
+                </div>
+                <div style="background: #000;" class="display-flex"><div id="fileInputButton"><img src="file_img.png"></div><div id="fileName" style="color: #fff;">vkdds</div><input type="file" id="fileInput"></div>
+                <div class="manageBox"id="manageBox"></div>
+                <div class="boxContainer" id = "boxContainer">
+                    
+                </div>
+                <div style="background-color: #000; padding: 5px;">
+                    <div class="input-container">
+                    <input id="sentenceEdit" placeholder="메시지를 입력하세요">
+                    <div id="send">말하기</div>
+                </div>
+                </div>
+            </div>
+            <div class = "sideBoxContainer-right" style="background: #000;">
+                <div>
+                    <div id="talk4" style="width: 300px; height: 100px;"></div>
+                    <div id="talk5" style="width: 300px; height: 100px;"></div>
+                    <div id="talk6" style="width: 300px; height: 100px;"></div>
+                    <div id="talk7" style="width: 300px; height: 100px;"></div>
+                </div>
+                <div class="display-flex">
+                    <div id="chatLogButton" class="sideButton-right">대화       확인</div>
+                    <!-- <div id="battleChallenge" class="sideButton-right">배틀참여</div> -->
+                    <div id="battleChallenge"><div class="sideButton-right">배틀참여</div></div>
+                    <div id="battleChallengeX" class="hidden-canvas"><div class="sideButton-right">배틀취소</div></div>
+                </div> 
             </div>
         </div>
-        <canvas id="myCanvas" class="hidden-canvas" width="800" height="600"></canvas>
-        <canvas id="screen" width="400" height="400"></canvas>
-        <div><input id="sentenceEdit"/></div><button id="send">말하기</button>
-        <div id="meButton">나임을 확인</div>
-        <div style="background: indianred;">
-            <div id="talk0" style="width: 300px; height: 100px;"></div>
-            <div id="talk1" style="width: 300px; height: 100px;"></div>
-            <div id="talk2" style="width: 300px; height: 100px;"></div>
-            <div id="talk3" style="width: 300px; height: 100px;"></div>
-        </div>
-        <script src="/socket.io/socket.io.js"></script> 
-        <script>
-            var canvas = document.getElementById('myCanvas');
-            var screen = document.getElementById('screen');
-            var ctx = canvas.getContext('2d');
-            var pSrc = screen.getContext('2d');
-
-
-            var b_img = new Image();
-
-            var userImg1 = new Image();
-            var userImg2 = new Image();
-            var userImg3 = new Image();
-            var userImg4 = new Image();
-
-            b_img.src = 'pan.jpg';
-
-            userImg1.src = 'dance/1.png';
-            userImg2.src = 'dance/2.png';
-            userImg3.src = 'dance/3.png';
-            userImg4.src = 'dance/4.png';
-
-            userImgList = [userImg1,userImg2,userImg3,userImg4];
-
-            var userList = [];
-            var userList_f = [];
-            var userMe = 'asd';
-            var userRoom = 'asd';
-            var userMeImg = 0;
-
-            var Mstate = 'y';
-            var userXMove = 0;
-            var userYMove = 0;
-
-            var background = {
-                x : 0,
-                y : 0,
-                width : 800,
-                height : 600,
-                draw(){
-                    ctx.drawImage(b_img,0,0);
-                }
-            }
-
-            const socket = io();
-
-            document.getElementById('asd').addEventListener('click',function(e){
-                var Hcanvas = document.getElementById("myCanvas");
-                Hcanvas.classList.toggle("hidden-canvas");
-                userRoom = 'asd';
-                socket.emit("room",'asd');
-                gameLoop();
-            });
-
-            document.getElementById('rew').addEventListener('click',function(e){
-                var Hcanvas = document.getElementById("myCanvas");
-                Hcanvas.classList.toggle("hidden-canvas");
-                userRoom = 'rew';
-                socket.emit("room",'rew');
-                gameLoop();
-            });
-
-            document.getElementById('zxc').addEventListener('click',function(e){
-                var Hcanvas = document.getElementById("myCanvas");
-                Hcanvas.classList.toggle("hidden-canvas");
-                userRoom = 'zxc';
-                socket.emit("room",'zxc');
-                gameLoop();
-            });
-
-            document.getElementById('meButton').addEventListener('click',function(e){
-                alert(userMe);
-            });
-
-            // 유저 생성 함수
-            function createUser(id, x, y,Sn) {
-                userList.push({ id, x, y, width: 100, height: 100, speed: 200, imgSn : Sn});
-                console.log(userList.length);
-                console.log('생성됨');
-            }
-
-            socket.on("guestList", (guestList,guest,userListt,userImgSn)=>{
-                alert(guest);
-                userMe = guest;
-                userMeImg = userImgSn;
-                //기존유저생성
-                createUser(guest,50,50,userImgSn);
-                console.log(userImgSn);
-                for (let i = userListt.length - 1; i >= 0; i--){
-                    createUser(userListt[i].id,userListt[i].x,userListt[i].y,userListt[i].imgSn);
-                }
-                //유저 백엔드로 보내기
-                socket.emit("updateGuestListOne",userList);
-            });
-
-
-            //서버수신
-            socket.on("updateGuestList", (List)=>{
-                console.log('업데이트됩니다');
-                userList = List;
-                userList_f = List;
-            });
-
-
-            //누군가 나갔을 때 서버수신
-            socket.on("bye",(id) =>{
-                for (let i = userList.length - 1; i >= 0; i--){
-                    if(userList[i].id === id){
-                        userList.splice(i,1);
-                    }
-                }
-                socket.emit("updateGuestListOne",userList);
-                console.log('누군가 나감');
-                console.log(userList);
-            });
-
-
-            //키다운이벤트 플레이어 서버송신
-            document.addEventListener('keydown',function(e){
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                if (e.code == 37 || e.key == "ArrowRight"){
-                    Mstate = 'x';
-                    userXMove = 200;
-                    console.log(userList.length);
-                } else if(e.key == 39 || e.key == "ArrowLeft") {
-                    Mstate = 'x';
-                    userXMove = -200;
-                }
-                else if(e.key == 38 || e.key == "ArrowUp") {
-                    Mstate = 'y';
-                    userYMove = -200;
-                }
-                else if(e.key == 40 || e.key == "ArrowDown") {
-                    Mstate = 'y';
-                    userYMove = 200;
-                }
-                for (let i = userList.length - 1; i >= 0; i--){
-                        const user = userList[i];
-                        console.log(userList.length);
-                        console.log(user.id);
-                        if(user.id === userMe){
-                            if(Mstate == 'x'){
-                                console.log('asdasdas');
-                                console.log(user.id);
-                                socket.emit("updateGuestList",user,userXMove,0);
-                                Mstate = 't'
-                            }else if(Mstate == 'y'){
-                                socket.emit("updateGuestList",user,0,userYMove);
-                                Mstate = 't'
-                            }
-                        }
-                    }
-            })
-
-
-            //메세지를 백엔드에서 프론드로받음
-            socket.on("talkF",(sentence, userSentneceIdx)=>{
-                // 부모 요소 선택
-                var parentElement = document.getElementById('talk'+userSentneceIdx);
-
-                // 이전의 <div> 삭제
-                var divToRemove = parentElement.querySelector("div");
-                if (divToRemove) {
-                    divToRemove.remove(); // divToRemove가 있는 경우에만 삭제
-                }
-
-                // 새로운 <div> 추가
-                parentElement.insertAdjacentHTML("beforeend", `<div>${sentence}</div>`);
-            })
-
-            document.querySelector('#send').addEventListener('click',function(e){
-
-                // 문장 가져오기
-                let sentenceElement = document.getElementById('sentenceEdit');
-                let sentence = sentenceElement ? sentenceElement.value : ''; // sentenceElement가 없으면 빈 문자열 반환
-                //메세지를 백엔드로 송신
-                socket.emit("talkB",sentence, userMeImg  );
-            
-            })  
-
-
-            //이미지를 백엔드에서 프론드로받음
-            socket.on("screenF",(screenData)=>{
-                var screenImg = new Image();
-                screenImg.src = screenData;
-                //screenImg가 로드 될때 drawImage
-                screenImg.onload = function() {
-                    pSrc.drawImage(screenImg, 0, 0);              
-                };            
-            })
-
-            document.getElementById('fileInput').addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    // 이미지 파일을 읽고 Socket.IO를 통해 서버에 전송합니다.
-                    socket.emit('screenB', e.target.result);
-                };
-                reader.readAsDataURL(file);
-            });
-
-
-            function gameLoop() {
-                //console.log('asdasd');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                background.draw();
-                for (let i = userList_f.length - 1; i >= 0; i--){
-                    //console.log(userList_f[i]);
-                    const user = userList_f[i];
-                    ctx.drawImage(userImgList[user.imgSn],user.x,user.y);
-                }
-                requestAnimationFrame(gameLoop);
-            }
-
-        </script>
     </body>
 </html>

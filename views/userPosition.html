@@ -173,7 +173,7 @@
     var whens = [];//whenseq,sn
 
     //슬라이더 크기 지정
-    fetch('/whenSeq') // '/query' 엔드포인트를 호출
+    fetch('/u/whenSeq') // '/query' 엔드포인트를 호출
     .then(response => response.json())
     .then(data => {
       whens = data.whens;
@@ -245,7 +245,7 @@
         context.drawImage(b_img, 0, 0, canvas.width, canvas.height);
 
         //이미지 로드 되자마자 데이터 가지고오기
-        fetch('/selectUserPosition',{
+        fetch('/u/selectUserPosition',{
           method: 'POST',
             headers: {
             'Content-Type': 'application/json'
@@ -355,7 +355,7 @@
       const p_y = document.getElementById('clickY').value;
 
             // 서버로 데이터 전송
-      fetch('/insertData', {
+      fetch('/u/insertData', {
           method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
