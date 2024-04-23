@@ -49,6 +49,7 @@ passport.use(new LocalStrategy(
           console.log('로dndjqtdma');
             return done(null, false);
         }
+        console.log(process.env.NODE_ENV);
         console.log('로그인 성공');
         return done(null, row);
     });
