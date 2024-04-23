@@ -16,10 +16,18 @@ var userRouter = require('./routes/user');
 var app = express();
 
 //다른 도메인에서도 api를 쓸수있도록 앱에 cors설정
-app.use(cors());
+const allowedOrigins = ['https://port-0-node-express-eu1k2lllm51c76.sel3.cloudtype.app', 'https://endearing-mousse-bffea8.netlify.app/'];
 const corsOptions = {
-  origin: 'https://port-0-node-express-eu1k2lllm51c76.sel3.cloudtype.app'
-  //origin: 'http://localhost:3000'
+  //origin: 'https://port-0-node-express-eu1k2lllm51c76.sel3.cloudtype.app'
+    origin: function (origin, callback) {
+      // `origin` 값이 허용된 도메인 목록에 포함되어 있는지 확인합니다.
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true); // 허용된 도메인 또는 `origin`이 `null`인 경우
+      } else {
+        callback(new Error('Not allowed by CORS')); // 허용되지 않은 도메인
+      }
+    },
+    credentials: true, // 요청에 자격 증명(Credentials)을 포함하도록 허용
 };
 app.use(cors(corsOptions));
 

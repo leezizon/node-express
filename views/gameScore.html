@@ -27,7 +27,6 @@
     table {
             border-collapse: collapse;
             width: 100%;
-            max-width: 400px;
             margin: 0 auto;
         }
 
@@ -63,7 +62,17 @@
 </body>
 
   <script>
-    fetch('/e/selectGameScore') // '/query' 엔드포인트를 호출
+    // fetch('/e/selectGameScore') // '/query' 엔드포인트를 호출
+    // .then(response => response.text())
+    // .then(data => {
+    //   document.getElementById('table-container').innerHTML = data;
+    // })
+    // .catch(error => {
+    //   console.error('데이터 가져오기 오류:', error);
+    // });
+
+
+    fetch('/e/selectGameLog') // '/query' 엔드포인트를 호출
     .then(response => response.text())
     .then(data => {
       document.getElementById('table-container').innerHTML = data;

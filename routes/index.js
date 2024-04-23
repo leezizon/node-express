@@ -11,7 +11,17 @@ const LocalStrategy = require('passport-local').Strategy;
 const bodyParser = require('body-parser');
 
 //세션키 사용,설정
-router.use(expressSession({ secret: 'your-secret-key', resave: false, saveUninitialized: false }));
+router.use(expressSession(
+  { secret: 'your-secret-key', 
+  resave: false, 
+  saveUninitialized: false ,    
+  cookie: {
+    // 쿠키 설정 (예: 세션 쿠키의 만료 시간 등)
+    maxAge: 60 * 60 * 1000, // 1시간
+    httpOnly: true, // HTTP 전용 쿠키로 설정
+    secure: process.env.NODE_ENV === 'production' // 프로덕션 환경에서만 HTTPS 사용
+  }
+}));
 router.use(passport.initialize());
 router.use(passport.session());
 //json 사용,설정
@@ -41,7 +51,16 @@ passport.use(new LocalStrategy(
         }
         console.log('로그인 성공');
         return done(null, row);
-  });
+    });
+
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+      } else {
+        console.log('데이터베이스 연결이 종료되었습니다.');
+      }
+    });
+
   }
 ));
 
@@ -71,6 +90,14 @@ passport.deserializeUser((id, done) => {
       console.log(row);
       return done(null, row);
   });
+
+  db.close((err) => {
+    if (err) {
+      console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+    } else {
+      console.log('데이터베이스 연결이 종료되었습니다.');
+    }
+  });
 });
 
 
@@ -91,12 +118,35 @@ router.get('/lee', function(req, res, next) {
 });
 
 // 로그인 엔드포인트
-router.post("/login", passport.authenticate('local', {
-  successRedirect: '/',
-  failureRedirect: '/lee',
-  failureFlash: true
-})
-);
+// router.post("/login", passport.authenticate('local', {
+//   successRedirect: '/',
+//   failureRedirect: '/lee',
+//   failureFlash: true
+// })
+// );
+// 로그인 엔드포인트
+router.post("/login", (req, res, next) => {
+  // CORS 헤더 설정
+  res.header('Access-Control-Allow-Origin', '*');
+
+  // passport.authenticate()를 사용하여 로그인 처리
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      // 로그인 실패 시 실패 리디렉션
+      return res.redirect('/lee');
+    }
+    req.logIn(user, (err) => {
+      if (err) {
+        return next(err);
+      }
+      // 로그인 성공 시 성공 리디렉션
+      return res.redirect('/');
+    });
+  })(req, res, next);
+});
 
 router.get('/logout', (req, res) => {
   req.session.destroy(() => {
@@ -226,35 +276,6 @@ router.get('/leePd', function(req, res, next) {
     });
   });
 });
-
-
-
-router.post('/test', function(req, res) {
-  let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
-    if (err) {
-        console.error(err.message);
-    }
-    console.log('Connected to the chinook database.');
-  });
-
-  db.run('INSERT INTO music ( email, musicNm,score) VALUES (?, ?, ?)', [req.body.enteredEmail,req.body.playMusic,req.body.playedScore], function(err) {
-    if (err) {
-      console.log('인서트에인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러 에러');
-      return console.error(err.message);
-    }
-    console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
-  });    
-  //res.header("Access-Control-Allow-Origin", "*");
-  res.json('T');
-
-  db.close((err) => {
-    if (err) {
-      console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
-    } else {
-      console.log('데이터베이스 연결이 종료되었습니다.');
-    }
-  });
-})
 
 //상품구매
 router.post('/save', function(req, res) {

@@ -50,8 +50,8 @@ nav a {
     border: 4px solid #eba84a; /* 겉 테두리 스타일 및 색상 설정 */
     border-radius: 15px; /* 테두리의 꼭지점을 둥글게 만듭니다. */
     cursor: pointer; /* 커서 스타일을 포인터로 변경하여 클릭 가능한 것임을 나타냅니다. */
-    width: 9vh;
-    margin-left: 1vh;
+    width: 100px;
+    margin-left: 5px;
     margin-bottom: 20px;
   }
 
@@ -64,7 +64,8 @@ nav a {
     border: 4px solid #eba84a; /* 겉 테두리 스타일 및 색상 설정 */
     border-radius: 15px; /* 테두리의 꼭지점을 둥글게 만듭니다. */
     cursor: pointer; /* 커서 스타일을 포인터로 변경하여 클릭 가능한 것임을 나타냅니다. */
-    width: 9vh;
+    width: 100px;
+    margin-left: 5px;
     margin-bottom: 20px;
   }
 
@@ -85,8 +86,10 @@ nav a {
 
 
 main {
-    width: 1000px;
-    display: flex; 
+    display: flex;
+    min-width: 1320px;
+    max-width: 1320px;
+    
     height: 100vh;
     margin: auto;
     background-color: #eba84a;
@@ -94,16 +97,23 @@ main {
 }
 
 .menu {
-    width: 70vh;
-    height: 80vh;
-    border: 2vh solid #502416;
+    /* max-width: 800px; */
+    /* margin: 20px auto; */
+    /* padding: 20px; */
+    border: 30px solid #502416;
     border-radius: 10px;
     background-color: #0c3056;
-    margin: 2vh;
+
+    margin: 50px;
     padding: 0;
     display: flex;
     flex-wrap: wrap;
+    /* justify-content: space-around; */
     overflow-y: auto; /* 세로 스크롤 활성화 */
+    min-width: 800px;
+    max-width: 800px;
+    min-height: 800px; /* 원하는 최소 높이 설정 */
+    max-height: 800px; /* 원하는 최대 높이 설정 */
 }
 
 .product .product-detail {
@@ -117,17 +127,17 @@ main {
     align-items: center;
     background-color:#f2ebe6;
     border-radius: 10px;
-    width: 17vh;
-    height: 17vh;
+    width: 200px; /* 3 개의 열을 가지도록 설정 */
+    height: 200px;
     overflow: hidden;
-    margin-top: 2vh;
-    margin-bottom: 2vh;
-    margin-left: 2vh;
+    margin-top: 30px;
+    margin-bottom: 25px;
+    margin-left: 33px;
     justify-content: space-around;
 }
 
 .product .custom-buttons {
-    margin-left: 2vh;
+    margin-left: 35px;
 }
 
 .horizontal-line {
@@ -148,24 +158,28 @@ img {
     background-color:#f2ebe6;
     border-radius: 10px;
     overflow: hidden;
-    width: 28vh;
-    height: 60vh;
+    height: 600px;
+    width:300px;
+    margin-right: 50px;
 }
 
 .sideStand {
     background-color : #c3c3c3;;
     height: 200px;
     width: 20px;
+    margin-right: 50px;
 }
 
 .explain{
     position: fixed;
-    background-color: #f2ebe6;
+
+    background-color:#f2ebe6;
     border-radius: 10px;
     overflow: auto;
-    width: 23vh;
-    height: 8vh;
-    margin-top: 69vh;
+    width: 260px;
+    height: 110px;
+    margin-right: 50px;
+    margin-top: 650px;
     padding: 20px;
 }
 
