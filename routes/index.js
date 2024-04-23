@@ -19,7 +19,6 @@ router.use(expressSession(
     // 쿠키 설정 (예: 세션 쿠키의 만료 시간 등)
     maxAge: 60 * 60 * 1000, // 1시간
     httpOnly: true, // HTTP 전용 쿠키로 설정
-    secure: process.env.NODE_ENV === 'production' // 프로덕션 환경에서만 HTTPS 사용
   }
 }));
 router.use(passport.initialize());
