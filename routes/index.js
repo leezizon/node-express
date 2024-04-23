@@ -19,6 +19,9 @@ router.use(expressSession(
     // 쿠키 설정 (예: 세션 쿠키의 만료 시간 등)
     maxAge: 60 * 60 * 1000, // 1시간
     httpOnly: true, // HTTP 전용 쿠키로 설정
+    secure: process.env.NODE_ENV === "production" ? true : false, //https 적용 시 true
+    sameSite: process.env.NODE_ENV === "production" ? "none" : false,
+    domain: process.env.NODE_ENV === "production" && "port-0-node-express-eu1k2lllm51c76.sel3.cloudtype.app"
   }
 }));
 router.use(passport.initialize());
