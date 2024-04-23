@@ -185,8 +185,8 @@ router.post('/gameStartLog', function(req, res) {
   function gameThreeOut(forChkReq) {
     return new Promise((resolve, reject) => {
       const today = new Date();
-      const todayLocal = new Date(today.getTime() - today.getTimezoneOffset() * 60 * 1000);
-      const formattedDate = todayLocal.toISOString().split('T')[0];
+      const todayKST = new Date(today.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+      const formattedDate = todayKST.toISOString().split('T')[0];
 
       db.all('SELECT userName, logDate, COUNT(*) AS play_count FROM playLog WHERE logDate = ? AND userName = ? AND state = ? GROUP BY userName, logDate',[formattedDate,forChkReq.user.name,'S'], (err, rows) => {
         rows.forEach((row) => {
