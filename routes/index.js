@@ -126,9 +126,6 @@ router.get('/lee', function(req, res, next) {
 // );
 // 로그인 엔드포인트
 router.post("/login", (req, res, next) => {
-  // CORS 헤더 설정
-  res.header('Access-Control-Allow-Origin', '*');
-
   // passport.authenticate()를 사용하여 로그인 처리
   passport.authenticate('local', (err, user, info) => {
     if (err) {
@@ -585,7 +582,6 @@ router.post('/selectManageGrid', function(req, res, next) {
     tableHtml += '</table>';
 
     // 렌더링된 HTML을 클라이언트로 보냄
-    res.header("Access-Control-Allow-Origin", "*");
     res.send(tableHtml);
 
     //close the database connection
@@ -643,7 +639,6 @@ router.post('/selectManageMoneyGrid', function(req, res, next) {
     tableHtml += '</table>';
 
     // 렌더링된 HTML을 클라이언트로 보냄
-    res.header("Access-Control-Allow-Origin", "*");
     res.send(tableHtml);
 
     //close the database connection
