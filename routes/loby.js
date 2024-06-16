@@ -14,6 +14,11 @@ router.get('/gameScore', function(req, res, next) {
     res.render('gameScore.html');
   });
 
+//게임유저관리 페이지
+router.get('/gameUserManage', function(req, res, next) {
+  res.render('gameManage.html');
+});
+
 router.get('/selectGameScore', function(req, res, next) {
   let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
     if (err) {
@@ -106,7 +111,6 @@ router.post('/test', function(req, res) {
     }
     console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
   });    
-  //res.header("Access-Control-Allow-Origin", "*");
   res.json('T');
 
   db.close((err) => {
@@ -148,13 +152,6 @@ router.post('/gameStartLog', function(req, res) {
     try{
       const userRows = await getUserData(req.user.id);
       const chkResult = await gameThreeOut(req);
-
-      console.log(userRows[0].Money);
-      console.log(userRows[0].Money);
-      console.log(userRows[0].Money);
-      console.log(userRows[0].Money);
-      console.log(userRows[0].Money);
-      console.log(chkResult);
 
       if(chkResult == 'T'){
         await addStartLog(req);
@@ -289,5 +286,117 @@ router.post('/gameEndLog', function(req, res) {
     }
   });
 })
+
+router.post('/start777', function(req, res) {
+
+  if (req.isAuthenticated() == true) {
+    req.body.userName = req.user.name;
+    res.json('T');
+  }else{
+    res.json('F');
+    return;
+  } 
+})
+
+router.post('/777EndLog', function(req, res) {
+  if (req.isAuthenticated() == true) {
+    req.body.userName = req.user.name;
+    res.json('T');
+  }else{
+    res.json('F');
+    return;
+  }
   
+  let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+
+  let db2 = new sqlite3.Database('./public/db/shop.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+
+  const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+  async function process777Start(req, res) {
+    try{
+      const userRows = await getUserData(req.user.id);
+  
+      await addStartLog(req);
+      await updateUserMoney(req.user.id,userRows[0].Money-1);
+  
+      await shutDb();
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json('Internal Server Error');
+    }
+  }
+
+  function addStartLog(forLogReq) {
+    return new Promise((resolve, reject) => {
+      db.run('INSERT INTO playLog ( userName, userIp, logMsg, logDate, score, state) VALUES (?, ?, ?, ?, ?, ?)', [forLogReq.body.userName,clientIp,forLogReq.body.logMsgData,forLogReq.body.formattedDate,req.body.playedScore,'E'], function(err) {
+        if (err) {
+          console.log('인서트에인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러 에러');
+          reject(err);
+        }
+        console.log(`게임 스타트 레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
+        resolve();
+      });    
+      //res.header("Access-Control-Allow-Origin", "*");
+    });
+  }
+
+  function getUserData(userId) {
+    return new Promise((resolve, reject) => {
+      db2.all('SELECT * FROM user_M WHERE id = ?', [userId], (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+    });
+  }
+
+  function updateUserMoney(id, f_m) {
+    return new Promise((resolve, reject) => {
+      db2.run('UPDATE user_M SET Money = ? WHERE id = ?', [f_m, id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          console.log(`User Money Updated: ${this.changes} records changed.`);
+          resolve();
+        }
+      });
+    });
+  }
+
+  function shutDb(){
+    return new Promise((resolve, reject) => {
+      db.close((err) => {
+        if (err) {
+          console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+        } else {
+          console.log('데이터베이스 연결이 종료되었습니다.');
+        }
+      });
+
+      db2.close((err) => {
+        if (err) {
+          console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+        } else {
+          console.log('데이터베이스 연결이 종료되었습니다.');
+        }
+      });
+    });
+  }
+  process777Start(req, res);
+})
+
 module.exports = router;

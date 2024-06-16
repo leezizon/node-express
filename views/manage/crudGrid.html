@@ -83,6 +83,7 @@
       <div class="input-container">
         <input type="text" class="custom-input" id="inputField" placeholder="여기에 입력하세요">
         <button class="custom-button" id="submitButton">전송</button>
+        <button class="custom-button" id="allUserButton">모든 유저 자산정보 가져오기</button>
       </div>
       <div class="login-container">
         <div class="pad">
@@ -98,11 +99,26 @@
           </div>
         </div>
       </div>
+      <div class="input-container">
+      </div>
+      <div class="input-container">
+        <button id="updateButton" class="custom-button">수정</button>
+        <button id="addRowBtn" class="cuㅛstom-button">행 추가</button>
+      </div>
+      <div class="login-container">
+        <div class="login-container">
+          <table id="table-container3">
+          </table>
+          <!-- 백엔드에서 생성한 표가 여기에 삽입됩니다. -->
+      </div>
+      </div>
     </div>
 </body>
 </body>
 
   <script>
+    var updateList = [];
+
     document.getElementById('submitButton').addEventListener('click', function() {
       var inputValue = document.getElementById('inputField').value;
       if(inputValue == ''){
@@ -118,30 +134,122 @@
             },
             body: jsonData
         }) // '/query' 엔드포인트를 호출
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById('table-container').innerHTML = data;
-    })
-    .catch(error => {
-      console.error('데이터 가져오기 오류:', error);
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('table-container').innerHTML = data;
+      })
+      .catch(error => {
+        console.error('데이터 가져오기 오류:', error);
+      });
+
+      fetch('/selectManageMoneyGrid',{
+          method: 'POST',
+          headers: {
+          'Content-Type': 'application/json'
+          },
+          body: jsonData
+      }) // '/query' 엔드포인트를 호출
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('table-container2').innerHTML = data;
+      })
+      .catch(error => {
+        console.error('데이터 가져오기 오류:', error);
+      });
     });
 
-    fetch('/selectManageMoneyGrid',{
+
+    document.getElementById('allUserButton').addEventListener('click', function() {
+      fetch('/selectAllUser',{
+        method: 'POST'
+      }) // '/query' 엔드포인트를 호출
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('table-container3').innerHTML = data;
+        gridEventListen();
+      })
+      .catch(error => {
+        console.error('데이터 가져오기 오류:', error);
+      });
+    })
+
+    function gridEventListen(){
+      const grid = document.getElementById('table-container3');
+      const addRowBtn = document.getElementById('addRowBtn');
+
+      // 각 셀에 클릭 이벤트 리스너 추가
+      grid.addEventListener('click', (event) => {
+        const targetCell = event.target;
+        if (targetCell.tagName === 'TD') {
+          // 클릭한 셀의 위치 가져오기
+          const clickedRow = targetCell.parentElement;
+
+          // 클릭한 셀의 내용 가져오기
+          const cellContent = targetCell.textContent;
+
+          // 셀의 내용을 인풋 창으로 교체
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = cellContent;
+          input.addEventListener('blur', () => {
+            // 인풋 창이 포커스를 잃으면 입력된 값을 셀에 반영
+            targetCell.textContent = input.value;
+            console.log(clickedRow.cells[0].textContent);
+            for(i=0;i<updateList.length;i++){
+              if(updateList[i].id == clickedRow.cells[0].textContent){
+                updateList.splice(i, 1);
+                console.log('같은값입니다');
+                break;
+              }
+            }
+            updateList.push({id:clickedRow.cells[0].textContent,Money:clickedRow.cells[2].textContent});
+          });
+          
+          // 클릭한 셀의 위치에 인풋 창 삽입
+          targetCell.textContent = '';
+          targetCell.appendChild(input);
+          input.focus(); // 인풋 창에 포커스 설정
+        }
+      });
+      // "행 추가" 버튼 클릭 이벤트 리스너 추가
+      addRowBtn.addEventListener('click', () => {
+        console.log('행추가');
+        const newRow = grid.insertRow(); // 새로운 행 추가
+
+        for (let i = 0; i < grid.rows[0].cells.length; i++) {
+          const newCell = newRow.insertCell();
+          const input = document.createElement('input');
+          input.type = 'text';
+          newCell.appendChild(input);
+        }
+      });
+    }
+
+
+    document.getElementById('updateButton').addEventListener('click', function() {
+      
+      
+      const jsonData = JSON.stringify(updateList);
+
+      if(updateList.length < 1){
+        alert('비었습니다');
+        return
+      }
+
+      fetch('/insertUser',{
         method: 'POST',
-        headers: {
-        'Content-Type': 'application/json'
-        },
-        body: jsonData
-    }) // '/query' 엔드포인트를 호출
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById('table-container2').innerHTML = data;
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: jsonData
+        }) // '/query' 엔드포인트를 호출
+      .then(response => response.text())
+      .then(data => {
+        alert('성공적으로 저장되었습니다')
+      })
+      .catch(error => {
+        console.error('데이터 가져오기 오류:', error);
+      });
     })
-    .catch(error => {
-      console.error('데이터 가져오기 오류:', error);
-    });
-    });
-
-
   </script>
 </html>

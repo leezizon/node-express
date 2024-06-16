@@ -173,6 +173,10 @@ router.get('/', ensureAuthenticated, (req, res) => {
 
 
 
+
+
+
+
 //상품
 router.get('/leePd2', function(req, res, next) {
   
@@ -655,6 +659,80 @@ router.post('/selectManageMoneyGrid', function(req, res, next) {
 }else{
   res.send('<div>관리자만 조회할 수 있습니다</div>');
 }
+});
+
+
+router.post('/selectAllUser', function(req, res, next) {
+
+  if (req.user.id == 5){
+
+  let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+  
+  db.all('SELECT * FROM user_M', (err, rows) => {
+    if (err) {
+      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
+    }
+
+    // HTML 표 생성
+    let tableHtml = '<tr><th>유저번호</th><th>아이디</th><th>자산</th><th>포인트</th></tr>';
+    rows.forEach((row) => {
+      tableHtml += `<tr><td>${row.id}</td><td>${row.name}</td><td>${row.Money}</td><td>${row.SpeP}</td></tr>`;
+    });
+
+    // 렌더링된 HTML을 클라이언트로 보냄
+    res.send(tableHtml);
+
+    //close the database connection
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+      } else {
+        console.log('데이터베이스 연결이 종료되었습니다.');
+      }
+    });
+  });  
+  }else{
+    res.send('<div>관리자만 조회할 수 있습니다</div>');    
+  }
+
+});
+
+router.post('/insertUser', function(req, res, next) {
+
+  if (req.user.id == 5){
+    let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+      if (err) {
+          console.error(err.message);
+      }
+      console.log('Connected to the chinook database.');
+    });
+  
+    for(i=0;i<req.body.length;i++){
+      db.run('UPDATE user_M SET Money = ? WHERE id = ?', [req.body[i].Money,req.body[i].id], function (err) {
+        if (err) {
+          console.error(err.message);
+        } else {
+          console.log(`Asset Inserted: ${this.changes} records changed.`);
+        }
+      });
+    }
+
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+        res.send('오류');
+      } else {
+        console.log('데이터베이스 연결이 종료되었습니다.');
+        res.send('성공');
+      }
+    });
+  }
+
 });
 
 module.exports = router;

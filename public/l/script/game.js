@@ -282,10 +282,12 @@ document.querySelector('#sentenceEdit').addEventListener('keydown', function(eve
     if (event.key === 'Enter') {
         // 문장 가져오기
         let sentenceElement = document.getElementById('sentenceEdit');
+        let imgs = document.getElementById('img'+userMeImg).querySelectorAll('img');
+        let nic = document.getElementById('nic'+userMeImg).textContent;
         let sentence = sentenceElement ? sentenceElement.value : ''; // sentenceElement가 없으면 빈 문자열 반환
         sentenceElement.value = '';
         //메세지를 백엔드로 송신
-        socket.emit("talkB",sentence, userMeImg  );
+        socket.emit("talkB",sentence, userMeImg ,imgs[0].getAttribute('src'), nic );
     }
 });
 
