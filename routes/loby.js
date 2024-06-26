@@ -9,6 +9,11 @@ router.get('/loby', function(req, res, next) {
     res.render('loby.html'); 
   });
 
+//게임 순위 페이지
+router.get('/gameRanking', function(req, res, next) {
+  res.render('gameLank.html');
+});
+
 //게임 스코어 페이지
 router.get('/gameScore', function(req, res, next) {
     res.render('gameScore.html');

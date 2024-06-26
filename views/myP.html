@@ -15,14 +15,11 @@
         <section class="purchase-history">
             <h2>구매 목록</h2>
             <ul>
-                <li>상품 1 - 가격: $50</li>
-                <li>상품 2 - 가격: $75</li>
-                <!-- 다른 구매 목록 항목을 여기에 추가 -->
             </ul>
         </section>
     </main>
     <script>
-        //상점조회
+        //내아이템조회
         fetch('/myPagePd') // '/query' 엔드포인트를 호출
         .then(response => response.json())
         .then(data => {

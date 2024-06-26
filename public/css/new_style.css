@@ -4,17 +4,39 @@
     src: url('/font/SPLATOON.ttf') format('truetype');
 }
 
-body {
+main{
     font-family: 'MyCustomFont', sans-serif;
+}
+
+body {
     background-color:#f2ebe6;
     margin: 0;
     padding: 0;
 }
 
 header {
-    background-color: #3498db;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    background-color: rgb(147, 44, 20);
     color: #fff;
     padding: 10px 0;
+}
+
+nav{
+    display: flex;
+}
+
+nav .Nmain{
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+}
+
+nav .Nmain a{
+    padding-right:30px;
 }
 
 nav ul {
@@ -38,7 +60,7 @@ nav a {
 .user-options {
     display: flex;
     align-items: center;
-    margin-left: auto;
+    margin-right: auto;
 }
 
 .custom-button {
@@ -72,7 +94,7 @@ nav a {
     margin-left: 10px;
     color: #fff;
     text-decoration: none;
-    background-color: #3498db;
+    background-color: #e74c3c;
     padding: 5px 10px;
     border: none;
     border-radius: 5px;

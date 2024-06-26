@@ -155,8 +155,12 @@ router.get('/logout', (req, res) => {
 });
 
 
+router.get('/', (req, res) => {
+  res.render('pofolHome.html'); // 보호된 페이지 템플릿을 렌더링
+});
 
-router.get('/', ensureAuthenticated, (req, res) => {
+
+router.get('/shop', ensureAuthenticated, (req, res) => {
   res.render('shop.html'); // 보호된 페이지 템플릿을 렌더링
 });
 
@@ -179,6 +183,60 @@ router.get('/', ensureAuthenticated, (req, res) => {
 
 //상품
 router.get('/leePd2', function(req, res, next) {
+  
+  const param1 = req.query.param1;
+
+  let dbIndex = 0;
+  let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+  
+  db.all('SELECT * FROM product LIMIT 6 OFFSET ?',[param1], (err, rows) => {
+    if (err) {
+      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
+    }
+
+    // HTML 표 생성
+    let tableHtml = '';
+    
+    tableHtml += `<div class="horizontal-line"></div>`
+
+    rows.forEach((row) => {
+      dbIndex += 1;
+      tableHtml += 
+      `<section class="product" id="Pd${row.PdId}">
+      <div class="product-detail">${row.PdNm}<img src="shopitem/${row.PdId}.png" alt="상품 이미지"></div>     
+      <div class = "custom-buttons">
+      <button id="getPdEx${row.PdId}"  class="custom-button2"><input type="hidden" class="hiddenField" value="${row.PdEx}">설명</button>
+      <button id="getPd${row.PdId}"  class="custom-button"><input type="hidden" class="hiddenField" value="${row.PdPrice}원">담기</button>
+      </div>
+      </section>`
+      if(dbIndex == 3){
+        tableHtml += `<div class="horizontal-line"></div>`
+      } 
+    });
+
+    tableHtml += `<div class="horizontal-line"></div>`
+
+    // 렌더링된 HTML을 클라이언트로 보냄
+    res.send(tableHtml);
+
+    //close the database connection
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+      } else {
+        console.log('데이터베이스 연결이 종료되었습니다.');
+      }
+    });
+  });
+});
+
+//상품db
+router.get('/leePdDb', function(req, res, next) {
   
   const param1 = req.query.param1;
 
