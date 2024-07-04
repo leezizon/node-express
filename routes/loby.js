@@ -38,7 +38,7 @@ router.get('/selectGameScore', function(req, res, next) {
     }
 
     // HTML 표 생성
-    let tableHtml = '<table> <tr><th>ranking</th><th>Email</th><th>Music</th><th>Score</th></tr>';
+    let tableHtml = '<table> <tr><th>ranking</th><th>Name</th><th>Music</th><th>Score</th></tr>';
     var scoreLen = 0;
     rows.forEach((row) => {
       scoreLen = scoreLen + 1;
@@ -102,32 +102,6 @@ router.get('/selectGameLog', function(req, res, next) {
 });
 
 router.post('/test', function(req, res) {
-  let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
-    if (err) {
-        console.error(err.message);
-    }
-    console.log('Connected to the chinook database.');
-  });
-
-  db.run('INSERT INTO music ( email, musicNm,score) VALUES (?, ?, ?)', [req.body.enteredEmail,req.body.playMusic,req.body.playedScore], function(err) {
-    if (err) {
-      console.log('인서트에인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러 에러');
-      return console.error(err.message);
-    }
-    console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
-  });    
-  res.json('T');
-
-  db.close((err) => {
-    if (err) {
-      console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
-    } else {
-      console.log('데이터베이스 연결이 종료되었습니다.');
-    }
-  });
-})
-
-router.post('/test2', function(req, res) {
   let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
     if (err) {
         console.error(err.message);

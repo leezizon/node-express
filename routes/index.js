@@ -8,6 +8,7 @@ var router = express.Router();
 const passport = require('passport');
 const expressSession = require('express-session');
 const LocalStrategy = require('passport-local').Strategy;
+const NaverStrategy = require('passport-naver').Strategy;
 const bodyParser = require('body-parser');
 
 //세션키 사용,설정
@@ -41,7 +42,7 @@ passport.use(new LocalStrategy(
     });
 
     //데이터베이스에서 사용자 확인
-    db.get("SELECT * FROM users WHERE email = ? AND password = ?", [username, password], (err, row) => {
+    db.get("SELECT * FROM users WHERE email = ? AND password = ? AND auth != 'N'", [username, password], (err, row) => {
       if (err) {
             console.log('로그인 tlfvo');
             return done(null, false);
@@ -66,40 +67,124 @@ passport.use(new LocalStrategy(
   }
 ));
 
-passport.serializeUser((user, done) => {
-  done(null, user.id);
+// Passport 설정
+passport.use(new NaverStrategy({
+    clientID: 'VOIhuplf7Mqbng97X8al',
+    clientSecret: 'TJQzkN6Q5m',
+    callbackURL: 'http://localhost:3000/auth/naver/callback'
+  },
+  function(accessToken, refreshToken, profile, done) {
+    // 유저 정보 저장 또는 처리
+    let db = new sqlite3.Database('./public/db/chinook.db', (err) => {
+      if (err) {
+        console.error(err.message);
+      }
+    });
+
+    db.get("SELECT * FROM users WHERE password = ?", [profile.id], async(err, row) => {
+      if (err) {
+        return done(err);
+      }
+      if (!row) {
+        // 사용자 정보가 없으면 새로 생성
+        const InUser = await createNUser();
+        
+        return done(null, InUser);
+      } else {
+        console.log('이미있어용');
+        console.log(row);
+        return done(null, row);
+      }
+    });
+
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+      }
+    });
+
+    function createNUser(){
+      return new Promise((resolve, reject) => {
+        db.run("INSERT INTO users (password, email, name, auth) VALUES (?, ?, ?, ?)", [profile.id,profile.emails[0].value, profile.displayName, "N"],async(err) => {
+          console.log("작동하긴 하나요?");
+          if (err) {
+            reject(err);
+          } else {
+            const InUserM = await createNUserM()
+            resolve({id: profile.id, name: profile.displayName, email:profile.emails[0].value, provider:"N", Money: InUserM});
+          }
+        });
+      })
+    }
+
+    function createNUserM(){
+      return new Promise((resolve, reject) => {
+        let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+          if (err) {
+            console.error(err.message);
+          }
+        });
+
+        db.run("INSERT INTO user_M (Money, SpeP, name, key) VALUES (?, ?, ?, ?)", [10000,0, profile.displayName, profile.id], (err) => {
+          console.log("M작동하긴 하나요?");
+          if (err) {
+            reject(err);
+          } 
+        });
+
+        db.close((err) => {
+          if (err) {
+            console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+          }else {
+            resolve(10000);
+          }
+        });
+      })
+    }
+  }
+));
+
+passport.serializeUser(async (user, done) => {
+  console.log('.serializeUser');
+  done(null, user);
 });
 
-passport.deserializeUser((id, done) => {
-  let db = new sqlite3.Database('./public/db/chinook.db', (err) => {
-    if (err) {
-        console.error(err.message);
-    }
-    console.log('Connected to the chinook database.');
-  });
+passport.deserializeUser((user, done) => {
   console.log('.deserializeUser');
-  //데이터베이스에서 사용자 확인
-  db.get("SELECT * FROM users WHERE id = ?", [id], (err, row) => {
-    if (err) {
-          console.log('로그인 tlfvo');
-          return done(null, false);
+  console.log(user.provider);
+  if(user.provider == "N"){
+    console.log('mmnnnnnnnnnnnnnnnnnnnnn');
+    return done(null, user);
+  }else{
+    let db = new sqlite3.Database('./public/db/chinook.db', (err) => {
+      if (err) {
+          console.error(err.message);
+      }
+      console.log('Connected to the chinook database.');
+    });
+
+    //데이터베이스에서 사용자 확인
+    db.get("SELECT * FROM users WHERE id = ?", [user.id], (err, row) => {
+      if (err) {
+        console.log('로그인 tlfvo');
+        return done(null, false);
       }
       if (!row) {
         console.log('섹션로그인');
-          return done(null, false);
+        return done(null, false);
       }
       console.log('섹션 로그인 성공');
-      console.log(row);
       return done(null, row);
-  });
+    });
 
-  db.close((err) => {
-    if (err) {
-      console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
-    } else {
-      console.log('데이터베이스 연결이 종료되었습니다.');
-    }
-  });
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+      } else {
+        console.log('데이터베이스 연결이 종료되었습니다.');
+      }
+    });
+  }
 });
 
 
@@ -118,6 +203,17 @@ router.get('/lee', function(req, res, next) {
   }
   res.render('gpt2.html');
 });
+
+// 네이버 로그인 라우트
+router.get('/auth/naver', passport.authenticate('naver'));
+
+router.get('/auth/naver/callback',
+  passport.authenticate('naver', { failureRedirect: '/' }),
+  (req, res) => {
+    // 로그인 성공 시 리디렉션할 URL
+    res.redirect('/');
+  }
+);
 
 // 로그인 엔드포인트
 // router.post("/login", passport.authenticate('local', {
@@ -156,6 +252,8 @@ router.get('/logout', (req, res) => {
 
 
 router.get('/', (req, res) => {
+  console.log()
+  console.log(req.user);
   res.render('pofolHome.html'); // 보호된 페이지 템플릿을 렌더링
 });
 
@@ -512,17 +610,21 @@ router.get('/inShopMyMoney', (req, res) => {
     return;
   }
 
+  let query = 'SELECT * FROM user_M WHERE id = ?';
+  if(req.user.provider == "N"){
+    query = 'SELECT * FROM user_M WHERE key = ?'
+  }
+
   let db = new sqlite3.Database('./public/db/shop.db', (err) => {
     if (err) {
         console.error(err.message);
     }
     console.log('Connected to the chinook database.');
   });
-  console.log(req.user.id);
-  db.all('SELECT * FROM user_M WHERE id = ?' ,[req.user.id], (err, rows) => {
 
-    console.log(rows[0].Money);
-    res.send({name:req.user.name, money:rows[0].Money});
+  db.all(query ,[req.user.id], (err, rows) => {
+
+  res.send({name:req.user.name, money:rows[0].Money});
 
   })
 
@@ -543,6 +645,11 @@ router.get('/myPage',ensureAuthenticated, (req, res) => {
 
 router.get('/myPagePd',ensureAuthenticated, (req, res) => {
   console.log('내상품정보');
+  console.log(req.user.id);
+  let query = 'SELECT * FROM user_M WHERE id = ?';
+  if(req.user.provider == "N"){
+    query = 'SELECT * FROM user_M WHERE key = ?'
+  }
 
   let db = new sqlite3.Database('./public/db/shop.db', (err) => {
     if (err) {
@@ -551,7 +658,7 @@ router.get('/myPagePd',ensureAuthenticated, (req, res) => {
     console.log('Connected to the chinook database.');
   });
 
-  db.all('SELECT * FROM user_M WHERE id = ?' ,[req.user.id], (err, rows) => {
+  db.all(query ,[req.user.id], (err, rows) => {
     let ProfileHtml = '';
 
     rows.forEach((row) => {
@@ -791,6 +898,137 @@ router.post('/insertUser', function(req, res, next) {
     });
   }
 
+});
+
+
+
+const json2xls = require('json2xls');
+
+
+router.get('/selectUserListDown', (req, res) => {
+  if (req.user.id == 5){
+    let db = new sqlite3.Database('./public/db/chinook.db', (err) => {
+      if (err) {
+        console.error(err.message);
+      }
+    });
+
+    db.all("SELECT * FROM users", [], (err, rows) => {
+      if (err) {
+        res.status(500).send(err.message);
+      } else {
+        const xls = json2xls(rows);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="data.xlsx"');
+        res.end(xls, 'binary');
+      }
+    });
+  }
+});
+
+router.get('/selectUserMoneyDown', (req, res) => {
+  if (req.user.id == 5){
+    let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+      if (err) {
+        console.error(err.message);
+      }
+    });
+
+    db.all("SELECT * FROM user_M", [], (err, rows) => {
+      if (err) {
+        res.status(500).send(err.message);
+      } else {
+        const xls = json2xls(rows);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="data.xlsx"');
+        res.end(xls, 'binary');
+      }
+    });
+  }
+});
+
+router.get('/selectUserAssetsDown', (req, res) => {
+  if (req.user.id == 5){
+    let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+      if (err) {
+        console.error(err.message);
+      }
+    });
+
+    db.all("SELECT * FROM assets", [], (err, rows) => {
+      if (err) {
+        res.status(500).send(err.message);
+      } else {
+        const xls = json2xls(rows);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="data.xlsx"');
+        res.end(xls, 'binary');
+      }
+    });
+  }
+});
+
+router.get('/selectAssetsDown', (req, res) => {
+  if (req.user.id == 5){
+    let db = new sqlite3.Database('./public/db/shop.db', (err) => {
+      if (err) {
+        console.error(err.message);
+      }
+    });
+
+    db.all("SELECT * FROM product", [], (err, rows) => {
+      if (err) {
+        res.status(500).send(err.message);
+      } else {
+        const xls = json2xls(rows);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="data.xlsx"');
+        res.end(xls, 'binary');
+      }
+    });
+  }
+});
+
+router.get('/selectGameLogDown', (req, res) => {
+  if (req.user.id == 5){
+    let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
+      if (err) {
+        console.error(err.message);
+      }
+    });
+
+    db.all("SELECT * FROM playLog", [], (err, rows) => {
+      if (err) {
+        res.status(500).send(err.message);
+      } else {
+        const xls = json2xls(rows);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="data.xlsx"');
+        res.end(xls, 'binary');
+      }
+    });
+  }
+});
+
+router.get('/selectLankDown', (req, res) => {
+  if (req.user.id == 5){
+    let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
+      if (err) {
+        console.error(err.message);
+      }
+    });
+
+    db.all("SELECT * FROM music", [], (err, rows) => {
+      if (err) {
+        res.status(500).send(err.message);
+      } else {
+        const xls = json2xls(rows);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="data.xlsx"');
+        res.end(xls, 'binary');
+      }
+    });
+  }
 });
 
 module.exports = router;

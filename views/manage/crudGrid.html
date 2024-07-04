@@ -111,6 +111,16 @@
           </table>
           <!-- 백엔드에서 생성한 표가 여기에 삽입됩니다. -->
       </div>
+      <div class="input-container">
+        <button id="userListDown" class="custom-button">유저리스트다운로드</button>
+        <button id="userMoneyDown" class="custom-button">유저자산정보다운로드</button>
+        <button id="userAssetsDown" class="custom-button">유저에셋정보다운로드</button>
+        <button id="assetsDown" class="custom-button">에셋정보다운로드</button>
+      </div>
+      <div class="input-container">
+        <button id="gameLogDown" class="custom-button">게임로그 다운로드</button>
+        <button id="lankDown" class="custom-button">랭킹정보다운로드</button>
+      </div>
       </div>
     </div>
 </body>
@@ -250,6 +260,123 @@
       .catch(error => {
         console.error('데이터 가져오기 오류:', error);
       });
+    })
+
+
+/////////////////////////////////////////////////////////////////
+    //정보 가져오기 버튼//
+    document.getElementById('userListDown').addEventListener('click', async function() {
+      const response = await fetch('/selectUserListDown', {
+        method: 'GET',
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'userData.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to download file:', response.statusText);
+      }
+    })
+
+    document.getElementById('userMoneyDown').addEventListener('click', async function() {
+      const response = await fetch('/selectUserMoneyDown', {
+        method: 'GET',
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'userMoneyData.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to download file:', response.statusText);
+      }
+    })
+
+    document.getElementById('userAssetsDown').addEventListener('click', async function() {
+      const response = await fetch('/selectUserAssetsDown', {
+        method: 'GET',
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'userAssetsData.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to download file:', response.statusText);
+      }
+    })
+
+    document.getElementById('assetsDown').addEventListener('click', async function() {
+      const response = await fetch('/selectAssetsDown', {
+        method: 'GET',
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'assetsData.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to download file:', response.statusText);
+      }
+    })
+
+    document.getElementById('gameLogDown').addEventListener('click', async function() {
+      const response = await fetch('/selectGameLogDown', {
+        method: 'GET',
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'gameLogData.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to download file:', response.statusText);
+      }
+    })
+
+    document.getElementById('lankDown').addEventListener('click', async function() {
+      const response = await fetch('/selectLankDown', {
+        method: 'GET',
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'lankDown.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to download file:', response.statusText);
+      }
     })
   </script>
 </html>
