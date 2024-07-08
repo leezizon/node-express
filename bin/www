@@ -218,16 +218,23 @@ io.on("connection",(socket)=>{
   });
 
   socket.on("otherRoom", (roomName) =>{
-    socket.join(roomName);
-    console.log('게임유저 들어왓습니다~');
+    if(io.sockets.adapter.rooms.get(roomName)?.size || 0 <= 5){
+      socket.join(roomName);
+      io.to(roomName).emit('setUser', socket.id);
+      const roomSizeIn = io.sockets.adapter.rooms.get(roomName)?.size || 0;
+      console.log(`게임유저 들어왓습니다~ ${roomSizeIn}명`);
+    }else{
+      console.log(`방이 꽉 찻어요~`);
+    }
 
     socket.on("sendAllS", (userInfo) =>{
       io.to(roomName).emit('sendAllF', socket.id, userInfo);
       console.log(userInfo);
     })
 
-    socket.on("disconnecting", () =>{
-      console.log('방을 나갑니다');
+    socket.on("disconnecting", () =>{const roomSize = io.sockets.adapter.rooms.get(roomName)?.size || 0;
+      const roomSizeOut = io.sockets.adapter.rooms.get(roomName)?.size || 0;
+      console.log(`방을 나갑니다${roomSizeOut}명`);
     })
   })
 });
