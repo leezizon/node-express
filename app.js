@@ -16,8 +16,8 @@ var userRouter = require('./routes/user');
 var app = express();
 
 //다른 도메인에서도 api를 쓸수있도록 앱에 cors설정
-const allowedOrigins = ['https://port-0-node-express-eu1k2lllm51c76.sel3.cloudtype.app', 'https://222leezieunpofol222.netlify.app'];
-//const allowedOrigins = ['http://localhost:3000', 'http://localhost:5501'];
+//const allowedOrigins = ['https://port-0-node-express-eu1k2lllm51c76.sel3.cloudtype.app', 'https://222leezieunpofol222.netlify.app'];
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:5500'];
 const corsOptions = {
   //origin: 'https://port-0-node-express-eu1k2lllm51c76.sel3.cloudtype.app'
     origin: function (origin, callback) {
