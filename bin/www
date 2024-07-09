@@ -39,6 +39,14 @@ var userSnList = [0,0,0]; //sn번호배정
 var userTokenList = [0,0,0]; //토큰이미지배정
 var uploadAuthList = ['youRN','youRN','youRN'];//각 방마다 이미지 업로드 권한을 가진 
 
+
+
+
+
+
+let connectedClients = {};
+
+
 io.on("connection",(socket)=>{
   socket.onAny((event)=>{
     console.log(event);
@@ -218,10 +226,11 @@ io.on("connection",(socket)=>{
   });
 
   socket.on("otherRoom", (roomName) =>{
-    if(io.sockets.adapter.rooms.get(roomName)?.size || 0 <= 5){
+    const roomSizeIn = io.sockets.adapter.rooms.get(roomName)?.size || 0;
+    if(roomSizeIn < 5){
       socket.join(roomName);
-      io.to(roomName).emit('setUser', socket.id);
-      const roomSizeIn = io.sockets.adapter.rooms.get(roomName)?.size || 0;
+      socket.emit("setUser",socket.id);
+      connectedClients[socket.id] = socket;
       console.log(`게임유저 들어왓습니다~ ${roomSizeIn}명`);
     }else{
       console.log(`방이 꽉 찻어요~`);
@@ -232,7 +241,13 @@ io.on("connection",(socket)=>{
       console.log(userInfo);
     })
 
-    socket.on("disconnecting", () =>{const roomSize = io.sockets.adapter.rooms.get(roomName)?.size || 0;
+    socket.on("disconnecting", () =>{
+      delete connectedClients[socket.id];
+      Object.keys(connectedClients).forEach(Client => {
+          console.log(connectedClients[Client].id);
+          console.log(Client);
+          console.log('------------------------------------------------');
+      });
       const roomSizeOut = io.sockets.adapter.rooms.get(roomName)?.size || 0;
       console.log(`방을 나갑니다${roomSizeOut}명`);
     })
