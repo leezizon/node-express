@@ -229,8 +229,8 @@ io.on("connection",(socket)=>{
     const roomSizeIn = io.sockets.adapter.rooms.get(roomName)?.size || 0;
     if(roomSizeIn < 5){
       socket.join(roomName);
-      socket.emit("setUser",connectedClients);
       connectedClients[socket.id] = socket;
+      io.to(roomName).emit("setUser",Object.keys(connectedClients));
       console.log(`게임유저 들어왓습니다~ ${roomSizeIn}명`);
     }else{
       console.log(`방이 꽉 찻어요~`);
@@ -243,6 +243,7 @@ io.on("connection",(socket)=>{
 
     socket.on("disconnecting", () =>{
       delete connectedClients[socket.id];
+      socket.broadcast.emit('setUser', Object.keys(connectedClients));
       Object.keys(connectedClients).forEach(Client => {
           console.log(connectedClients[Client].id);
           console.log(Client);
