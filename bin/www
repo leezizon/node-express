@@ -236,9 +236,9 @@ io.on("connection",(socket)=>{
       console.log(`방이 꽉 찻어요~`);
     }
 
-    socket.on("sendAllS", (userInfo,state) =>{
-      io.to(roomName).emit('sendAllF', socket.id, userInfo);
-      console.log(state);
+    socket.on("sendAllS", (userInfo,stateSrc) =>{
+      io.to(roomName).emit('sendAllF', socket.id, userInfo, stateSrc);
+      console.log(stateSrc);
     })
 
     socket.on("disconnecting", () =>{
