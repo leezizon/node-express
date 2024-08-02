@@ -301,6 +301,41 @@ router.post('/gameEndLog', function(req, res) {
   });
 })
 
+router.post('/gameEndLogNotLogin', function(req, res) {
+  const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+  let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+
+  db.run('INSERT INTO playLog ( userName, userIp, logMsg, logDate, score, state) VALUES (?, ?, ?, ?, ?, ?)', [req.body.userName,clientIp,req.body.logMsgData,req.body.formattedDate,req.body.playedScore,'E'], function(err) {
+    if (err) {
+      console.log('인서트에인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러 에러');
+      return console.error(err.message);
+    }
+    console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
+  });    
+  //res.header("Access-Control-Allow-Origin", "*");
+  db.run('INSERT INTO music ( email, musicNm,score) VALUES (?, ?, ?)', [req.body.userName,req.body.IMusic,req.body.playedScore], function(err) {
+    if (err) {
+      console.log('인서트에인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러인서트에 에러 에러');
+      return console.error(err.message);
+    }
+    console.log(`레코드가 업데이트되었습니다: ${this.changes} 개의 레코드가 변경되었습니다.`);
+  });
+
+  db.close((err) => {
+    if (err) {
+      console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+    } else {
+      console.log('데이터베이스 연결이 종료되었습니다.');
+    }
+  });
+})
+
 router.post('/start777', function(req, res) {
 
   if (req.isAuthenticated() == true) {
