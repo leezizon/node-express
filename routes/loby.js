@@ -334,6 +334,8 @@ router.post('/gameEndLogNotLogin', function(req, res) {
       console.log('데이터베이스 연결이 종료되었습니다.');
     }
   });
+
+  res.json('T');
 })
 
 router.post('/start777', function(req, res) {
