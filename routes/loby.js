@@ -62,6 +62,46 @@ router.get('/selectGameScore', function(req, res, next) {
   });
 });
 
+router.get('/selectGameScoreInk', function(req, res, next) {
+  let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    }
+    console.log('Connected to the chinook database.');
+  });
+  
+  const Mname = 'song4';
+
+  db.all(`SELECT * FROM music WHERE musicNm = ? ORDER BY score DESC LIMIT 5`, [Mname], (err, rows) => {
+    if (err) {
+      return res.send('데이터베이스에서 정보를 가져오지 못했습니다.');
+    }
+
+    // HTML 표 생성
+    let tableHtml = '<table> <tr><th>ranking</th><th>Name</th><th>Music</th><th>Score</th></tr>';
+    var scoreLen = 0;
+    rows.forEach((row) => {
+      scoreLen = scoreLen + 1;
+      tableHtml += `<tr><td>${scoreLen}</td><td>${row.email}</td><td>${row.musicNm}</td><td>${row.score}</td></tr>`;
+    });
+
+    tableHtml += '</table>';
+
+    // 렌더링된 HTML을 클라이언트로 보냄
+    //res.header("Access-Control-Allow-Origin", "*");
+    res.send(tableHtml);
+
+    //close the database connection
+    db.close((err) => {
+      if (err) {
+        console.error('데이터베이스 연결 종료 중 오류 발생:', err.message);
+      } else {
+        console.log('데이터베이스 연결이 종료되었습니다.');
+        }
+    });
+  });
+});
+
 //게임로그확인
 router.get('/selectGameLog', function(req, res, next) {
   let db = new sqlite3.Database('./public/db/gameScore.db', (err) => {
